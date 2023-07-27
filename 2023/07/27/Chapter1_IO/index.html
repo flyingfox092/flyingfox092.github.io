@@ -17,16 +17,16 @@
   
     <meta name="keywords" content="system programming" />
   
-  <meta name="description" content="本章内容主要讲解标准I&#x2F;O以及文件I&#x2F;O。 I&#x2F;O是一切实现的基础。">
+  <meta name="description" content="本章内容主要讲解I&#x2F;O相关函数，文件描述符。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Chapter1_IO">
 <meta property="og:url" content="http://example.com/2023/07/27/Chapter1_IO/index.html">
 <meta property="og:site_name" content="江城子同学">
-<meta property="og:description" content="本章内容主要讲解标准I&#x2F;O以及文件I&#x2F;O。 I&#x2F;O是一切实现的基础。">
+<meta property="og:description" content="本章内容主要讲解I&#x2F;O相关函数，文件描述符。">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="http://example.com/2023/07/27/Chapter1_IO/images/thumbnail/Chapter1_IO.png">
 <meta property="article:published_time" content="2023-07-27T10:36:59.000Z">
-<meta property="article:modified_time" content="2023-07-27T20:15:59.992Z">
+<meta property="article:modified_time" content="2023-07-27T20:20:32.099Z">
 <meta property="article:author" content="flyingfox">
 <meta property="article:tag" content="system programming">
 <meta name="twitter:card" content="summary">
@@ -161,7 +161,7 @@
             
             <div id="expire-alert" class="alert alert-warning hidden" role="alert">
                 <div class="icon"><i class="fa fa-warning"></i></div>
-                <div class="text"><p>本文最后编辑于 <time datetime="1690488959992"></time> 前，其中的内容可能需要更新。</p></div>
+                <div class="text"><p>本文最后编辑于 <time datetime="1690489232099"></time> 前，其中的内容可能需要更新。</p></div>
             </div>
             
             
@@ -171,10 +171,10 @@
                 </div>
             
             <hr />
-            <div itemprop="articleBody"><p>本章内容主要讲解标准I&#x2F;O以及文件I&#x2F;O。</p>
-<p><strong>I&#x2F;O是一切实现的基础。</strong></p>
+            <div itemprop="articleBody"><p>本章内容主要讲解I&#x2F;O相关函数，文件描述符。</p>
 <span id="more"></span>
 
+<p><strong>I&#x2F;O是一切实现的基础。</strong></p>
 <h2 id="标准I-O"><a href="#标准I-O" class="headerlink" title="标准I&#x2F;O"></a>标准I&#x2F;O</h2><h3 id="fopen-3"><a href="#fopen-3" class="headerlink" title="fopen(3)"></a>fopen(3)</h3><p>fopen()函数用于打开一个文件，并返回一个指向FILE结构体的指针，该结构体包含了关于文件的信息，如文件流、读写位置等，以供后续使用高级文件流进行文件的读写操作。它可以用于创建新文件、打开已存在的文件，并指定文件的打开模式（只读、只写、追加等）。函数原型如下：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line">FILE *<span class="title function_">fopen</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *path, <span class="type">const</span> <span class="type">char</span> *mode)</span>;</span><br></pre></td></tr></table></figure>
 
@@ -394,8 +394,7 @@
             const twitterBase   = "https://twitter.com/intent/tweet?";
             const hostUrl       = "http://example.com/2023/07/27/Chapter1_IO/";
             const title         = "「Chapter1_IO」";
-            const excerpt       = `本章内容主要讲解标准I&#x2F;O以及文件I&#x2F;O。
-I&#x2F;O是一切实现的基础。`;
+            const excerpt       = `本章内容主要讲解I&#x2F;O相关函数，文件描述符。`;
             let _URL;
             switch (dest) {
                 case "qq"       : _URL = qqBase+"url="+hostUrl+"&title="+title+"&desc=&summary="+excerpt+"&site=cxpy";     break;
@@ -417,7 +416,7 @@ I&#x2F;O是一切实现的基础。`;
                     <a class="tag-none-link" href="/tags/system-programming/" rel="tag">system programming</a>
                 </div>
                 <div class="pull-date">
-                    <time datetime="2023-07-27T20:15:59.992Z" itemprop="dateModified">最后编辑：2023-07-28</time>
+                    <time datetime="2023-07-27T20:20:32.099Z" itemprop="dateModified">最后编辑：2023-07-28</time>
                 </div>
             </div>
         </footer>
@@ -494,7 +493,7 @@ I&#x2F;O是一切实现的基础。`;
                 
   <aside id="krw-categories" class="widget widget-kratos-categories clearfix">
     <h4 class="widget-title"><i class="fa fa-folder"></i>分类目录</h4>
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E3%80%8AC%E8%AF%AD%E8%A8%80%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B%E5%AE%9E%E8%B7%B5%E3%80%8B/">《C语言系统编程实践》</a><span class="category-list-count">1</span></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/%E3%80%8A%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B%E5%AE%9E%E8%B7%B5%EF%BC%88C%E8%AF%AD%E8%A8%80%E7%89%88%EF%BC%89%E3%80%8B/">《系统编程实践（C语言版）》</a><span class="category-list-count">1</span></li></ul>
   </aside>
 
 
