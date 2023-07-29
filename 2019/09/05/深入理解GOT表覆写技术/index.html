@@ -15,7 +15,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <meta name="format-detection" content="telphone=no, email=no" />
   
-    <meta name="keywords" content="Got, PLT" />
+    <meta name="keywords" content="ELF, 共享库, 动态链接" />
   
   <meta name="description" content="前言玩pwn的时候，有时要用到got表覆写技术，本文在于分享对GOT表覆写技术的理解，铺垫性的基础知识较多，目的在于让初学者知其然，还要知其所以然！">
 <meta property="og:type" content="article">
@@ -38,10 +38,11 @@
 <meta property="og:image" content="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/12%E6%A8%A1%E5%9D%97%E9%97%B4%E8%B7%B3%E8%BD%AC.PNG">
 <meta property="og:image" content="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/13%E5%88%86%E6%9E%90%E7%BB%93%E6%9E%9C.PNG">
 <meta property="article:published_time" content="2019-09-05T15:01:04.000Z">
-<meta property="article:modified_time" content="2023-07-28T08:51:33.249Z">
+<meta property="article:modified_time" content="2023-07-29T06:27:15.771Z">
 <meta property="article:author" content="flyingfox">
-<meta property="article:tag" content="Got">
-<meta property="article:tag" content="PLT">
+<meta property="article:tag" content="ELF">
+<meta property="article:tag" content="共享库">
+<meta property="article:tag" content="动态链接">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://f1yingf0x-1300215590.cos.ap-chengdu.myqcloud.com/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Got%E8%A1%A8%E8%A6%86%E5%86%99%E6%8A%80%E6%9C%AF/1%E9%93%BE%E6%8E%A5%E8%A7%86%E5%9B%BE.PNG">
   
@@ -174,7 +175,7 @@
             
             <div id="expire-alert" class="alert alert-warning hidden" role="alert">
                 <div class="icon"><i class="fa fa-warning"></i></div>
-                <div class="text"><p>本文最后编辑于 <time datetime="1690534293249"></time> 前，其中的内容可能需要更新。</p></div>
+                <div class="text"><p>本文最后编辑于 <time datetime="1690612035771"></time> 前，其中的内容可能需要更新。</p></div>
             </div>
             
             
@@ -411,10 +412,10 @@
             <div class="footer-tag clearfix">
                 <div class="pull-left">
                 <i class="fa fa-tags"></i>
-                    <a class="tag-none-link" href="/tags/Got/" rel="tag">Got</a>, <a class="tag-none-link" href="/tags/PLT/" rel="tag">PLT</a>
+                    <a class="tag-none-link" href="/tags/ELF/" rel="tag">ELF</a>, <a class="tag-none-link" href="/tags/%E5%85%B1%E4%BA%AB%E5%BA%93/" rel="tag">共享库</a>, <a class="tag-none-link" href="/tags/%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5/" rel="tag">动态链接</a>
                 </div>
                 <div class="pull-date">
-                    <time datetime="2023-07-28T08:51:33.249Z" itemprop="dateModified">最后编辑：2023-07-28</time>
+                    <time datetime="2023-07-29T06:27:15.771Z" itemprop="dateModified">最后编辑：2023-07-29</time>
                 </div>
             </div>
         </footer>
@@ -481,7 +482,7 @@
                 标签
             </span>
             <span class="count">
-                12
+                7
             </span>
         </a>
     </div>
@@ -504,7 +505,7 @@
                 
   <aside id="krw-categories" class="widget widget-kratos-categories clearfix">
     <h4 class="widget-title"><i class="fa fa-folder"></i>分类目录</h4>
-      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/SQL%E6%B3%A8%E5%85%A5/">SQL注入</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E3%80%8A%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B%E5%AE%9E%E8%B7%B5%EF%BC%88C%E8%AF%AD%E8%A8%80%E7%89%88%EF%BC%89%E3%80%8B/">《系统编程实践（C语言版）》</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E4%BA%8C%E8%BF%9B%E5%88%B6/">二进制</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/">渗透测试</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%BD%AF%E4%BB%B6%E7%A0%B4%E8%A7%A3/">软件破解</a><span class="category-list-count">1</span></li></ul>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/SQL%E6%B3%A8%E5%85%A5/">SQL注入</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E3%80%8A%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B%E5%AE%9E%E8%B7%B5%EF%BC%88C%E8%AF%AD%E8%A8%80%E7%89%88%EF%BC%89%E3%80%8B/">《系统编程实践（C语言版）》</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E4%BA%8C%E8%BF%9B%E5%88%B6/">二进制</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/">渗透测试</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%BD%AF%E4%BB%B6%E6%BF%80%E6%B4%BB/">软件激活</a><span class="category-list-count">1</span></li></ul>
   </aside>
 
 
@@ -513,7 +514,7 @@
   <aside id="krw-tags" class="widget widget-kratos-tags clearfix">
     <h4 class="widget-title"><i class="fa fa-tags"></i>标签聚合</h4>
       <div class="tag-clouds">
-        <a href="/tags/DynELF/" style="font-size: 0.6em;">DynELF</a> <a href="/tags/Got/" style="font-size: 0.6em;">Got</a> <a href="/tags/NX/" style="font-size: 0.6em;">NX</a> <a href="/tags/PLT/" style="font-size: 0.6em;">PLT</a> <a href="/tags/SQL%E6%B3%A8%E5%85%A5/" style="font-size: 0.6em;">SQL注入</a> <a href="/tags/SSH%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/" style="font-size: 0.6em;">SSH免密登录</a> <a href="/tags/canary/" style="font-size: 0.6em;">canary</a> <a href="/tags/pie/" style="font-size: 0.6em;">pie</a> <a href="/tags/relro/" style="font-size: 0.6em;">relro</a> <a href="/tags/system-programming/" style="font-size: 0.6em;">system programming</a> <a href="/tags/write%E5%87%BD%E6%95%B0/" style="font-size: 0.6em;">write函数</a> <a href="/tags/%E8%BD%AF%E4%BB%B6%E7%A0%B4%E8%A7%A3/" style="font-size: 0.6em;">软件破解</a>
+        <a href="/tags/BurpSuite/" style="font-size: 0.6em;">BurpSuite</a> <a href="/tags/DynELF/" style="font-size: 0.6em;">DynELF</a> <a href="/tags/ELF/" style="font-size: 0.6em;">ELF</a> <a href="/tags/SSH%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/" style="font-size: 0.6em;">SSH免密登录</a> <a href="/tags/system-programming/" style="font-size: 0.6em;">system programming</a> <a href="/tags/%E5%85%B1%E4%BA%AB%E5%BA%93/" style="font-size: 0.6em;">共享库</a> <a href="/tags/%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5/" style="font-size: 0.6em;">动态链接</a>
       </div>
   </aside>
 
