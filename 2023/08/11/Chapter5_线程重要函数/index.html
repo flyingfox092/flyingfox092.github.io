@@ -26,7 +26,7 @@
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="http://example.com/2023/08/11/Chapter5_%E7%BA%BF%E7%A8%8B%E9%87%8D%E8%A6%81%E5%87%BD%E6%95%B0/images/thumbnail/thread-function.png">
 <meta property="article:published_time" content="2023-08-11T10:36:59.000Z">
-<meta property="article:modified_time" content="2023-08-15T20:09:52.658Z">
+<meta property="article:modified_time" content="2023-08-15T20:20:52.810Z">
 <meta property="article:author" content="flyingfox">
 <meta property="article:tag" content="system programming">
 <meta name="twitter:card" content="summary">
@@ -161,7 +161,7 @@
             
             <div id="expire-alert" class="alert alert-warning hidden" role="alert">
                 <div class="icon"><i class="fa fa-warning"></i></div>
-                <div class="text"><p>本文最后编辑于 <time datetime="1692130192658"></time> 前，其中的内容可能需要更新。</p></div>
+                <div class="text"><p>本文最后编辑于 <time datetime="1692130852810"></time> 前，其中的内容可能需要更新。</p></div>
             </div>
             
             
@@ -177,10 +177,10 @@
 <p>注：标题中显示的函数数字表示该函数在man手册中所在章节（第2章的是系统调用函数，第3章的是标准函数）</p>
 <h2 id="线程的概念"><a href="#线程的概念" class="headerlink" title="线程的概念"></a>线程的概念</h2><p>线程就是一个正在运行的函数。（进程就是容器，用来承载线程）</p>
 <p>POSIX线程是一套标准，而不是实现。</p>
-<p>线程标识：pthread_t 中的”p”表示POSIX，数据类型不确定，因为各家实现不一样，有可能是整型，有可能是结构体，还有可能是typedef出来的指针类型。</p>
-<p>ps axf：查看进程关系</p>
-<p>ps axm：查看每个进程的线程</p>
-<p>ps ax -L：以列表形式查看进程与线程关系；</p>
+<p>线程标识：<code>pthread_t </code>中的”p”表示POSIX，数据类型不确定，因为各家实现不一样，有可能是整型，有可能是结构体，还有可能是typedef出来的指针类型。</p>
+<p><code>ps axf</code>：查看进程关系</p>
+<p><code>ps axm</code>：查看每个进程的线程</p>
+<p><code>ps ax -L</code>：以列表形式查看进程与线程关系；</p>
 <blockquote>
 <p>  -L:    Show threads, possibly with LWP and NLWP columns.</p>
 <p>   m:    Show threads after processes.</p>
@@ -597,7 +597,7 @@
                     <a class="tag-none-link" href="/tags/system-programming/" rel="tag">system programming</a>
                 </div>
                 <div class="pull-date">
-                    <time datetime="2023-08-15T20:09:52.658Z" itemprop="dateModified">最后编辑：2023-08-16</time>
+                    <time datetime="2023-08-15T20:20:52.810Z" itemprop="dateModified">最后编辑：2023-08-16</time>
                 </div>
             </div>
         </footer>
