@@ -17,16 +17,16 @@
   
     <meta name="keywords" content="system programming" />
   
-  <meta name="description" content="主要介绍进程的终止方式，重点介绍钩子函数">
+  <meta name="description" content="​	主要介绍进程的终止方式，重点介绍钩子函数">
 <meta property="og:type" content="article">
 <meta property="og:title" content="钩子函数|进程的终止方式">
 <meta property="og:url" content="http://example.com/2023/08/17/%E9%92%A9%E5%AD%90%E5%87%BD%E6%95%B0/index.html">
 <meta property="og:site_name" content="江城子同学">
-<meta property="og:description" content="主要介绍进程的终止方式，重点介绍钩子函数">
+<meta property="og:description" content="​	主要介绍进程的终止方式，重点介绍钩子函数">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="http://example.com/2023/08/17/%E9%92%A9%E5%AD%90%E5%87%BD%E6%95%B0/images/thumbnail/hook-function.png">
 <meta property="article:published_time" content="2023-08-16T16:00:00.000Z">
-<meta property="article:modified_time" content="2023-08-16T17:57:16.804Z">
+<meta property="article:modified_time" content="2023-08-17T04:39:32.080Z">
 <meta property="article:author" content="flyingfox">
 <meta property="article:tag" content="system programming">
 <meta name="twitter:card" content="summary">
@@ -149,7 +149,7 @@
                         <i class="fa fa-edit"></i> 
                         
                         
-                            ~5.28K
+                            ~5.17K
                         
                         字
                     </li>
@@ -161,7 +161,7 @@
             
             <div id="expire-alert" class="alert alert-warning hidden" role="alert">
                 <div class="icon"><i class="fa fa-warning"></i></div>
-                <div class="text"><p>本文最后编辑于 <time datetime="1692208636804"></time> 前，其中的内容可能需要更新。</p></div>
+                <div class="text"><p>本文最后编辑于 <time datetime="1692247172080"></time> 前，其中的内容可能需要更新。</p></div>
             </div>
             
             
@@ -171,11 +171,11 @@
                 </div>
             
             <hr />
-            <div itemprop="articleBody"><p>主要介绍进程的终止方式，重点介绍钩子函数</p>
+            <div itemprop="articleBody"><p>​	主要介绍进程的终止方式，重点介绍钩子函数</p>
 <span id="more"></span>
 
 <p>注：标题中显示的函数数字表示该函数在man手册中所在章节（第2章的是系统调用函数，第3章的是标准函数）</p>
-<h2 id="进程的终止"><a href="#进程的终止" class="headerlink" title="进程的终止"></a>进程的终止</h2><p>进程的终止方式可分为以下5种正常终止方式和3种异常终止方式：</p>
+<h2 id="进程的终止"><a href="#进程的终止" class="headerlink" title="进程的终止"></a>进程的终止</h2><p>​	进程的终止方式可分为以下5种正常终止方式和3种异常终止方式：</p>
 <p><strong>正常终止：</strong></p>
 <p>​	从main函数返回；</p>
 <p>​	调用exit；</p>
@@ -189,57 +189,57 @@
 <h3 id="调用exit"><a href="#调用exit" class="headerlink" title="调用exit"></a>调用exit</h3><blockquote>
 <p>  <em>EXIT(3)</em></p>
 <p>  <em><strong>NAME</strong></em></p>
-<p>  ​       <em>exit - cause normal process termination</em></p>
+<p>  ​	<em>exit - cause normal process termination</em></p>
 <p>  <em><strong>SYNOPSIS</strong></em></p>
-<p>  ​       <em>#include &lt;stdlib.h&gt;</em></p>
-<p>  ​       <em>void</em> <em>exit(int status);</em></p>
+<p>  ​	<em>#include &lt;stdlib.h&gt;</em></p>
+<p>  ​	<em>void</em> <em>exit(int status);</em></p>
 <p>  <em><strong>DESCRIPTION</strong></em></p>
-<p>  ​       <em>The  exit()  function causes normal process termination and the value of <strong>status &amp; 0377</strong> is returned to the parent  (see wait(2)).</em></p>
-<p>  ​       <em><u>All functions registered with atexit(3) and on_exit(3) are called, in the reverse order of their registration</u>. (It is possible for one of these functions to use atexit(3) or on_exit(3) to register an additional function to be executed during exit processing; the new registration is added to the front of the list of functions that remain to be called.)  If one of these functions does not return (e.g., it calls _exit(2), or kills itself with a signal), then none of the remaining  functions  is  called, and  further  exit processing (in particular, flushing of stdio(3) streams) is abandoned.  If a function has been registered multiple times using atexit(3) or on_exit(3), then  it  is  called  as  many times as it was registered.</em></p>
-<p>  ​       <em>All open stdio(3) streams are flushed and closed.  Files created by tmpfile(3) are removed.</em></p>
-<p>  ​       <em>The  C  standard specifies two constants, EXIT_SUCCESS and EXIT_FAILURE, that may be passed to exit() to indicate successful or unsuccessful termination, respectively.</em></p>
+<p>  ​	<em>The  exit()  function causes normal process termination and the value of <strong>status &amp; 0377</strong> is returned to the parent  (see wait(2)).</em></p>
+<p>  ​	<em><u>All functions registered with atexit(3) and on_exit(3) are called, in the reverse order of their registration</u>. (It is possible for one of these functions to use atexit(3) or on_exit(3) to register an additional function to be executed during exit processing; the new registration is added to the front of the list of functions that remain to be called.)  If one of these functions does not return (e.g., it calls _exit(2), or kills itself with a signal), then none of the remaining  functions  is  called, and  further  exit processing (in particular, flushing of stdio(3) streams) is abandoned.  If a function has been registered multiple times using atexit(3) or on_exit(3), then  it  is  called  as  many times as it was registered.</em></p>
+<p>  ​	<em>All open stdio(3) streams are flushed and closed.  Files created by tmpfile(3) are removed.</em></p>
+<p>  ​	<em>The  C  standard specifies two constants, EXIT_SUCCESS and EXIT_FAILURE, that may be passed to exit() to indicate successful or unsuccessful termination, respectively.</em></p>
 <p>  <em><strong>RETURN VALUE</strong></em></p>
-<p>  ​       <em>The exit() function does not return.</em></p>
+<p>  ​	<em>The exit() function does not return.</em></p>
 </blockquote>
 <p><code>status &amp; 0377</code>：exit()能带回去的值就只有256种，-128~127。</p>
 <h3 id="exit-Exit"><a href="#exit-Exit" class="headerlink" title="_exit&#x2F;_Exit"></a>_exit&#x2F;_Exit</h3><blockquote>
 <p>  <em>_EXIT(2)</em></p>
 <p>  <em><strong>NAME</strong></em></p>
-<p>  ​       <em>_exit, _Exit - terminate the calling process</em></p>
+<p>  ​	<em>_exit, _Exit - terminate the calling process</em></p>
 <p>  <em><strong>SYNOPSIS</strong></em></p>
-<p>  ​       <em>#include &lt;unistd.h&gt;</em></p>
-<p>  ​       <em>void _exit(int status);</em></p>
-<p>  ​       <em>#include &lt;stdlib.h&gt;</em></p>
-<p>  ​       <em>void _Exit(int status);</em></p>
+<p>  ​	<em>#include &lt;unistd.h&gt;</em></p>
+<p>  ​	<em>void _exit(int status);</em></p>
+<p>  ​	<em>#include &lt;stdlib.h&gt;</em></p>
+<p>  ​	<em>void _Exit(int status);</em></p>
 <p>  <em><strong>DESCRIPTION</strong></em></p>
-<p>  ​       <em>The function _exit() terminates the calling process “immediately”.  Any open file descriptors belonging to the process are closed; any children of the process are inherited by process 1, init, and  the process’s parent is sent a SIGCHLD signal.</em></p>
-<p>  ​       <em>The value status is returned to the parent process as the process’s exit status, and can be collected using one of the wait(2) family of calls.</em></p>
-<p>  ​       <em>The function _Exit() is equivalent to _exit().</em></p>
+<p>  ​	<em>The function _exit() terminates the calling process “immediately”.  Any open file descriptors belonging to the process are closed; any children of the process are inherited by process 1, init, and  the process’s parent is sent a SIGCHLD signal.</em></p>
+<p>  ​	<em>The value status is returned to the parent process as the process’s exit status, and can be collected using one of the wait(2) family of calls.</em></p>
+<p>  ​	<em>The function _Exit() is equivalent to _exit().</em></p>
 <p>  <em><strong>RETURN VALUE</strong></em></p>
-<p>  ​       <em>These functions do not return.</em></p>
+<p>  ​	<em>These functions do not return.</em></p>
 </blockquote>
 <p>调用_exit&#x2F;_Exit函数，不执行钩子函数，也不执行IO清理的。</p>
 <p>什么时候用exit()，什么时候用_exit()&#x2F;_Exit()？</p>
 <p>只要出错了然后什么都不敢动了，调用_exit()&#x2F;_Exit()；该刷新的，正常结束的，调用exit()。</p>
-<p><img src="https://flyingfox092-1300215590.cos.ap-shanghai.myqcloud.com/system-programming/sp3-hook-function.png" alt="《UNIX环境高级编程》"></p>
+<p><img src="https://flyingfox092-1300215590.cos.ap-shanghai.myqcloud.com/system-programming/sp3-hook-function.png" alt="来源于《UNIX环境高级编程（第三版）》"></p>
 <p>（以下用伪码表示）</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">func</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>/<span class="number">1</span>/<span class="number">2</span>;	<span class="comment">// 返回值有三种可能</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">int</span> f;</span><br><span class="line">    f = func();</span><br><span class="line">    ...???</span><br><span class="line">    <span class="keyword">switch</span>(f)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">0</span>:</span><br><span class="line">        <span class="keyword">case</span> <span class="number">1</span>:</span><br><span class="line">        <span class="keyword">case</span> <span class="number">2</span>:</span><br><span class="line">        <span class="comment">// 如果f值不是0/1/2种的任何一种</span></span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">func</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>/<span class="number">1</span>/<span class="number">2</span>;	<span class="comment">// 返回值有三种可能</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> f;</span><br><span class="line">    f = func();</span><br><span class="line">    ...???</span><br><span class="line">    <span class="keyword">switch</span>(f)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="number">0</span>:</span><br><span class="line">        <span class="keyword">case</span> <span class="number">1</span>:</span><br><span class="line">        <span class="keyword">case</span> <span class="number">2</span>:</span><br><span class="line">        <span class="comment">// 如果f值不是0/1/2种的任何一种</span></span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>如果f值不是0&#x2F;1&#x2F;2种的任何一种，有理由怀疑调用func()后，switch(f)语句前，这两个语句中间的代码出现问题，多半是写越界，把f变量的空间给覆盖写了。如果此时调用exit()函数，执行各种钩子函数，同步刷新IO等可能会扩大故障，这时候可以用_exit()，直接退出，不执行钩子函数，不刷新IO操作。当然也可以用信号，比如调用abort()，给当前进程发送signal abort信号，把自己杀死，顺便得到一个出错的现场，来分析这个现场是什么原因导致f值出现第四种情况。</p>
 <h2 id="钩子函数"><a href="#钩子函数" class="headerlink" title="钩子函数"></a>钩子函数</h2><blockquote>
 <p>  <em>ATEXIT(3)</em></p>
 <p>  <em><strong>NAME</strong></em></p>
-<p>  ​       <em>atexit -</em> <em>register a function to be called at normal process termination</em></p>
+<p>  ​	<em>atexit -</em> <em>register a function to be called at normal process termination</em></p>
 <p>  <em><strong>SYNOPSIS</strong></em></p>
-<p>  ​       <em>#include &lt;stdlib.h&gt;</em></p>
-<p>  ​       <em>int atexit(void (*function)(void));</em></p>
+<p>  ​	<em>#include &lt;stdlib.h&gt;</em></p>
+<p>  ​	<em>int atexit(void (*function)(void));</em></p>
 <p>  <em><strong>DESCRIPTION</strong></em></p>
-<p>  ​       <em>The atexit() function registers the given function to be called at normal process termination, either via exit(3) or via return from the program’s main().  Functions  so  registered  are  called  in  the reverse order of their registration; no arguments are passed.</em></p>
-<p>  ​       <em>The same function may be registered multiple times: it is called once for each registration.</em></p>
-<p>  ​       <em>POSIX.1  requires  that  an implementation allow at least ATEXIT_MAX (32) such functions to be registered.  The actual limit supported by an implementation can be obtained using sysconf(3).</em></p>
-<p>  ​       <em>When a child process is created via fork(2), it inherits copies of its parent’s registrations. Upon a successful call to one of the exec(3) functions, all registrations are removed.</em></p>
+<p>  ​	<em>The atexit() function registers the given function to be called at normal process termination, either via exit(3) or via return from the program’s main().  Functions  so  registered  are  called  in  the reverse order of their registration; no arguments are passed.</em></p>
+<p>  ​	<em>The same function may be registered multiple times: it is called once for each registration.</em></p>
+<p>  ​	<em>POSIX.1  requires  that  an implementation allow at least ATEXIT_MAX (32) such functions to be registered.  The actual limit supported by an implementation can be obtained using sysconf(3).</em></p>
+<p>  ​	<em>When a child process is created via fork(2), it inherits copies of its parent’s registrations. Upon a successful call to one of the exec(3) functions, all registrations are removed.</em></p>
 <p>  <em><strong>RETURN VALUE</strong></em></p>
-<p>  ​       <em>The atexit() function returns the value 0 if successful; otherwise it returns a nonzero value.</em></p>
+<p>  ​	<em>The atexit() function returns the value 0 if successful; otherwise it returns a nonzero value.</em></p>
 </blockquote>
 <p>atexit()函数（俗称钩子函数）用于注册在程序<strong>正常退出时</strong>要执行的函数。函数原型如下：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">atexit</span><span class="params">(<span class="type">void</span> (*function)(<span class="type">void</span>))</span>;</span><br></pre></td></tr></table></figure>
@@ -261,7 +261,7 @@
 <li>如果程序因为异常或调用了 abort() 等函数导致非正常退出，那么通过 atexit() 注册的清理函数将不会被执行。</li>
 </ol>
 <p>举个栗子：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">f1</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;f1() is working.\n&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">f2</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;f2() is working.\n&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">f3</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;f3() is working.\n&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span> **argv)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;Begin.\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">	atexit(f1);</span><br><span class="line">	atexit(f2);</span><br><span class="line">	atexit(f3);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;End.\n&quot;</span>);</span><br><span class="line">	<span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">f1</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;f1() is working.\n&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">f2</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;f2() is working.\n&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">f3</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;f3() is working.\n&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span> **argv)</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;Begin.\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">    atexit(f1);</span><br><span class="line">    atexit(f2);</span><br><span class="line">    atexit(f3);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;End.\n&quot;</span>);</span><br><span class="line">    <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>编译运行结果如下：</p>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ make atexit</span><br><span class="line">cc     atexit.c   -o atexit</span><br><span class="line">$ ./atexit </span><br><span class="line">Begin.</span><br><span class="line">End.</span><br><span class="line">f3() is working.</span><br><span class="line">f2() is working.</span><br><span class="line">f1() is working.</span><br></pre></td></tr></table></figure>
@@ -333,7 +333,7 @@
             const twitterBase   = "https://twitter.com/intent/tweet?";
             const hostUrl       = "http://example.com/2023/08/17/%E9%92%A9%E5%AD%90%E5%87%BD%E6%95%B0/";
             const title         = "「钩子函数|进程的终止方式」";
-            const excerpt       = `主要介绍进程的终止方式，重点介绍钩子函数`;
+            const excerpt       = `​	主要介绍进程的终止方式，重点介绍钩子函数`;
             let _URL;
             switch (dest) {
                 case "qq"       : _URL = qqBase+"url="+hostUrl+"&title="+title+"&desc=&summary="+excerpt+"&site=cxpy";     break;
@@ -355,7 +355,7 @@
                     <a class="tag-none-link" href="/tags/system-programming/" rel="tag">system programming</a>
                 </div>
                 <div class="pull-date">
-                    <time datetime="2023-08-16T17:57:16.804Z" itemprop="dateModified">最后编辑：2023-08-17</time>
+                    <time datetime="2023-08-17T04:39:32.080Z" itemprop="dateModified">最后编辑：2023-08-17</time>
                 </div>
             </div>
         </footer>
