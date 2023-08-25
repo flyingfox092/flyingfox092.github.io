@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+  <!-- 元数据 -->
+  <meta charset="utf-8">
+  
+  
+  <title>第六章：进程间通信 | 江城子同学</title>
+  
+  <meta name="author" content="flyingfox" />
+  <meta http-equiv="Cache-Control" content="no-transform" />
+  <meta http-equiv="Cache-Control" content="no-siteapp" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="robots" content="index,follow" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="format-detection" content="telphone=no, email=no" />
+  
+    <meta name="keywords" content="system programming" />
+  
+  <meta name="description" content="介绍进程间通信的几种方式：管道、消息队列、信号量、共享内存">
+<meta property="og:type" content="article">
+<meta property="og:title" content="第六章：进程间通信">
+<meta property="og:url" content="http://example.com/2023/08/25/Chapter6_%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1/index.html">
+<meta property="og:site_name" content="江城子同学">
+<meta property="og:description" content="介绍进程间通信的几种方式：管道、消息队列、信号量、共享内存">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2023/08/25/Chapter6_%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1/images/thumbnail/ipc.png">
+<meta property="article:published_time" content="2023-08-25T05:00:00.000Z">
+<meta property="article:modified_time" content="2023-08-25T08:52:01.056Z">
+<meta property="article:author" content="flyingfox">
+<meta property="article:tag" content="system programming">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2023/08/25/Chapter6_%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1/images/thumbnail/ipc.png">
+  
+  <!-- 站点验证相关 -->
+  
+    
+    
+    
+  
+  <!-- 样式表文件 -->
+  <link rel="stylesheet" id="kratos-css" href="/css/kratosr.min.css" media="all"></script>
+  
+    <link rel="stylesheet" id="darkmode-css" href="/css/kr-color-dark.min.css" media="(prefers-color-scheme: dark)"></script>
+    <script src="/js/kr-dark.min.js"></script>
+  
+  
+    <link rel="stylesheet" id="highlight-css" href="/css/highlight/night-eighties.min.css" media="all"></script>
+  
+  <link rel="stylesheet" id="fontawe-css" href="/vendors/font-awesome@4.7.0/css/font-awesome.min.css" media="all"></script>
+  <link rel="stylesheet" id="nprogress-css" href="/vendors/nprogress@0.2.0/nprogress.css" media="all"></script>
+  
+  
+    <link rel="stylesheet" href="/vendors/aplayer@1.10.1/dist/APlayer.min.css"></script>
+  
+  
+    <link rel="stylesheet" href="/vendors/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css"></script>
+  
+  <!-- 不得不预先加载的一些JS文件 -->
+  <script src="/vendors/jquery@3.6.0/dist/jquery.min.js"></script>
+  
+    <script src="/vendors/qrcode_js@1.0.0/qrcode.min.js"></script>
+  
+  
+  <style>
+    
+    
+  </style>
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+    <body class="custom-background">
+        <div id="kratos-wrapper">
+    <div id="kratos-page">
+        <div id="kratos-header">
+            <header id="kratos-desktop-topnav" class="kratos-topnav">
+                <div class="container">
+                    <div class="nav-header">
+                        <nav id="kratos-menu-wrap">
+                            <ul id="kratos-primary-menu" class="sf-menu">
+                                
+                                    
+                                    
+                                        
+                                            <li><a href="/"><i class="fa fa-home"></i>首页</a></li>
+                                        
+                                    
+                                        
+                                            <li><a href="/archives/"><i class="fa fa-file"></i>档案馆</a></li>
+                                        
+                                    
+                                
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </header>
+            <header id="kratos-mobile-topnav" class="kratos-topnav">
+                <div class="container">
+                    <div class="color-logo"><a href="/">江城子同学</a></div>
+                    <div class="nav-toggle">
+                        <a class="kratos-nav-toggle js-kratos-nav-toggle">
+                            <i></i>
+                        </a>
+                    </div>
+                </div>
+            </header>
+        </div>
+        <div class="kratos-start kratos-hero-2">
+            <!-- <div class="kratos-overlay"></div> -->
+            <div class="kratos-cover kratos-cover-2 text-center">
+                <div class="desc desc2 animate-box">
+                    <a href="/">
+                        <h2>江城子同学</h2> <br />
+                        <span>十年饮冰，难凉热血</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div id="kratos-blog-post">
+            <div class="container">
+                <div id="main" class="row">
+                    
+
+        
+
+            <section class="col-md-8">
+
+        
+
+            <article itemscope itemtype="https://schema.org/Article">
+    
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/08/25/Chapter6_%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1/">
+    <div class="kratos-hentry kratos-post-inner clearfix">
+        <header class="kratos-entry-header">
+            
+                <h1 class="kratos-entry-title text-center" itemprop="name headline">第六章：进程间通信</h1>
+            
+            
+            <ul class="kratos-post-meta text-center">
+                <li><time datetime="2023-08-25T05:00:00.000Z" itemprop="datePublished"><i class="fa fa-calendar"></i> 2023-08-25</time></li>
+                <li itemprop="author" itemscope itemtype="https://schema.org/Person">
+                    <i class="fa fa-user"></i> 作者 <span itemprop="name">flyingfox</span>
+                </li>
+                
+                    <li>
+                        <i class="fa fa-edit"></i> 
+                        
+                        
+                            ~49.49K
+                        
+                        字
+                    </li>
+                
+                
+            </ul>
+        </header>
+        <div class="kratos-post-content">
+            
+            <div id="expire-alert" class="alert alert-warning hidden" role="alert">
+                <div class="icon"><i class="fa fa-warning"></i></div>
+                <div class="text"><p>本文最后编辑于 <time datetime="1692953521056"></time> 前，其中的内容可能需要更新。</p></div>
+            </div>
+            
+            
+            
+                <div class="kratos-post-inner-toc toc-div-class" >
+                    <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AE%A1%E9%81%93"><span class="toc-number">1.</span> <span class="toc-text">管道</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8C%BF%E5%90%8D%E7%AE%A1%E9%81%93-pipe-2"><span class="toc-number">1.1.</span> <span class="toc-text">匿名管道|pipe(2)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%91%BD%E5%90%8D%E7%AE%A1%E9%81%93-mkfifo-3"><span class="toc-number">1.2.</span> <span class="toc-text">命名管道|mkfifo(3)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#XSI-IPC"><span class="toc-number">2.</span> <span class="toc-text">XSI-IPC</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#ftok-3"><span class="toc-number">2.1.</span> <span class="toc-text">ftok(3)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97"><span class="toc-number">2.2.</span> <span class="toc-text">消息队列</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#msgget-2"><span class="toc-number">2.2.1.</span> <span class="toc-text">msgget(2)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#msgop-2"><span class="toc-number">2.2.2.</span> <span class="toc-text">msgop(2)</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#msgsnd-2"><span class="toc-number">2.2.2.1.</span> <span class="toc-text">msgsnd(2)</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#msgrcv-2"><span class="toc-number">2.2.2.2.</span> <span class="toc-text">msgrcv(2)</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#msgctl-2"><span class="toc-number">2.2.3.</span> <span class="toc-text">msgctl(2)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BF%A1%E5%8F%B7%E9%87%8F"><span class="toc-number">2.3.</span> <span class="toc-text">信号量</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#semget-2"><span class="toc-number">2.3.1.</span> <span class="toc-text">semget(2)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#semop-2"><span class="toc-number">2.3.2.</span> <span class="toc-text">semop(2)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#semctl-2"><span class="toc-number">2.3.3.</span> <span class="toc-text">semctl(2)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B1%E4%BA%AB%E5%86%85%E5%AD%98"><span class="toc-number">2.4.</span> <span class="toc-text">共享内存</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#shmget-2"><span class="toc-number">2.4.1.</span> <span class="toc-text">shmget(2)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#shmop-2"><span class="toc-number">2.4.2.</span> <span class="toc-text">shmop(2)</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#shmat-2"><span class="toc-number">2.4.2.1.</span> <span class="toc-text">shmat(2)</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#shmdt-2"><span class="toc-number">2.4.2.2.</span> <span class="toc-text">shmdt(2)</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#shmctl-2"><span class="toc-number">2.4.3.</span> <span class="toc-text">shmctl(2)</span></a></li></ol></li></ol></li></ol>
+                </div>
+            
+            <hr />
+            <div itemprop="articleBody"><p>介绍进程间通信的几种方式：管道、消息队列、信号量、共享内存</p>
+<span id="more"></span>
+
+<p>注：标题中显示的函数数字表示该函数在man手册中所在章节（第2章的是系统调用函数，第3章的是标准函数）</p>
+<h2 id="管道"><a href="#管道" class="headerlink" title="管道"></a>管道</h2><p>管道就是顺序存储的循环队列。管道只有凑齐读写双方才算建立成功。</p>
+<p>内核提供，单工，自同步机制（迁就较慢的一方）。</p>
+<h3 id="匿名管道-pipe-2"><a href="#匿名管道-pipe-2" class="headerlink" title="匿名管道|pipe(2)"></a>匿名管道|pipe(2)</h3><p>函数背景：在UNIX系统中，进程间通信（IPC）是一个核心功能。为了让一个进程可以将数据发送到另一个进程，UNIX提供了一个叫做管道（pipe）的原始IPC机制。pipe() 函数用于创建这样的匿名管道。</p>
+<blockquote>
+<p>  <em>PIPE(2)</em></p>
+<p>  <em><strong>NAME</strong></em></p>
+<p>  ​       <em>pipe, pipe2 - create pipe</em></p>
+<p>  <em><strong>SYNOPSIS</strong></em></p>
+<p>  ​       <em>#include &lt;unistd.h&gt;</em></p>
+<p>  ​       <em>&#x2F;* On Alpha, IA-64, MIPS, SuperH, and SPARC&#x2F;SPARC64; see NOTES *&#x2F;</em></p>
+<p>  ​       <em>struct fd_pair {</em></p>
+<p>  ​           <em>long fd[2];</em></p>
+<p>  ​       <em>};</em></p>
+<p>  ​       <em>struct fd_pair pipe();</em></p>
+<p>  ​       <em>&#x2F;* On all other architectures *&#x2F;</em></p>
+<p>  ​       <em>int pipe(int pipefd[2]);</em></p>
+<p>  ​       <em>#define _GNU_SOURCE             &#x2F;* See feature_test_macros(7) *&#x2F;</em></p>
+<p>  ​       <em>#include &lt;fcntl.h&gt;              &#x2F;* Obtain O_* constant definitions *&#x2F;</em></p>
+<p>  ​       <em>#include &lt;unistd.h&gt;</em></p>
+<p>  ​       <em>int pipe2(int pipefd[2], int flags);</em></p>
+<p>  <em><strong>DESCRIPTION</strong></em></p>
+<p>  ​       <em>pipe()  creates  a  pipe,  a unidirectional data channel that can be used for interprocess communication.  The array pipefd is used to return two file descriptors referring  to  the ends  of the pipe.  pipefd[0] refers to the read end of the pipe.  pipefd[1] refers to the write end of the pipe.  Data written to the write end of the pipe is buffered by the  kernel until it is read from the read end of the pipe.  For further details, see pipe(7).</em></p>
+<p>  ​       <em>If  flags  is  0, then pipe2() is the same as pipe().  The following values can be bitwise ORed in flags to obtain different behavior:</em></p>
+<p>  ​       <em><strong>O_CLOEXEC</strong></em> : <em>Set the close-on-exec (FD_CLOEXEC) flag on the two new file descriptors.   See  the description of the same flag in open(2) for reasons why this may be useful.</em></p>
+<p>  ​       <em><strong>O_DIRECT</strong></em> <em>(since Linux 3.4)</em> : <em>Create  a  pipe  that  performs I&#x2F;O in “packet” mode.  Each write(2) to the pipe is dealt with as a separate packet, and read(2)s from the pipe will read one packet at a time.  Note the following points:</em></p>
+<ul>
+<li>Writes  of greater than PIPE_BUF bytes (see pipe(7)) will be split into multiple packets.  The constant PIPE_BUF is defined in &lt;limits.h&gt;.</li>
+<li>If a read(2) specifies a buffer size that is smaller than the next packet,  then the  requested  number of bytes are read, and the excess bytes in the packet are discarded.  Specifying a buffer size of PIPE_BUF will be sufficient to read  the largest possible packets (see the previous point).</li>
+<li>Zero-length  packets are not supported.  (A read(2) that specifies a buffer size of zero is a no-op, and returns 0.)</li>
+</ul>
+<p>  ​              <em>Older kernels that do not support this flag will indicate this via an EINVAL error.</em></p>
+<p>  ​              <em>Since Linux 4.5, it is possible to change the O_DIRECT setting of a pipe  file  descriptor using fcntl(2).</em></p>
+<p>  ​       <em><strong>O_NONBLOCK</strong></em> : <em>Set  the  O_NONBLOCK  file status flag on the open file descriptions referred to by the new file descriptors.  Using this flag saves extra calls to fcntl(2) to achieve the same result.</em></p>
+<p>  <em><strong>RETURN VALUE</strong></em></p>
+<p>  ​       <em>On  success,  zero is returned.  On error, -1 is returned, errno is set appropriately, and pipefd is left unchanged.</em></p>
+<p>  ​       <em>On Linux (and other systems), pipe() does not modify pipefd  on  failure.   A  requirement standardizing  this behavior was added in POSIX.1-2016.  The Linux-specific pipe2() system call likewise does not modify pipefd on failure.</em></p>
+</blockquote>
+<p>函数功能：pipe()函数用于创建一个匿名管道，允许有亲缘关系的进程之间进行通信。数据写入管道的一端，可以从另一端读出。</p>
+<p>函数原型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;unistd.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">pipe</span><span class="params">(<span class="type">int</span> pipefd[<span class="number">2</span>])</span>;</span><br></pre></td></tr></table></figure>
+
+<p>参数说明：</p>
+<ul>
+<li><code>pipefd[0]</code>：读端的文件描述符。</li>
+<li><code>pipefd[1]</code>：写端的文件描述符。</li>
+</ul>
+<p>函数返回值：</p>
+<ul>
+<li>成功时，返回0。</li>
+<li>失败时，返回-1，并设置<code>errno</code>为相应的错误。</li>
+</ul>
+<p>注意事项：</p>
+<ol>
+<li>当不再需要管道时，应关闭相关的文件描述符。</li>
+<li>管道的读端和写端都应该是单独使用的。例如，在父进程中写，子进程中读。</li>
+<li>如果写端被所有进程关闭，从读端读取数据将返回0（表示文件结束）。</li>
+<li>如果读端被所有进程关闭，写入数据到写端将导致发送信号<code>SIGPIPE</code>至进程，并导致进程退出，除非进程捕捉或忽略该信号。</li>
+<li>管道是半双工的。如果需要全双工通信（即双方都可以读写），可以考虑使用其他IPC机制，如套接字。</li>
+</ol>
+<p>举个栗子：</p>
+<p>产生一个匿名管道，用于具有亲缘关系的父子间进程通信，父进程写管道，子进程读管道：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/wait.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUFSIZE 1024</span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">int</span> pipefd[<span class="number">2</span>], len;</span><br><span class="line">    <span class="type">char</span> buf[BUFSIZE];</span><br><span class="line">    <span class="type">pid_t</span> pid;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (pipe(pipefd) &lt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        perror(<span class="string">&quot;pipe()&quot;</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    pid = fork();</span><br><span class="line">    <span class="keyword">if</span> (pid &lt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        perror(<span class="string">&quot;fork()&quot;</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (pid == <span class="number">0</span>) <span class="comment">// child read</span></span><br><span class="line">    &#123;</span><br><span class="line">        close(pipefd[<span class="number">1</span>]);</span><br><span class="line">        len = read(pipefd[<span class="number">0</span>], buf, BUFSIZE);</span><br><span class="line">        write(<span class="number">1</span>, buf, len);</span><br><span class="line">        close(pipefd[<span class="number">0</span>]);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="comment">// parent write</span></span><br><span class="line">    &#123;</span><br><span class="line">        close(pipefd[<span class="number">0</span>]);</span><br><span class="line">        write(pipefd[<span class="number">1</span>], <span class="string">&quot;Hello\n&quot;</span>, <span class="number">6</span>);</span><br><span class="line">        close(pipefd[<span class="number">1</span>]);</span><br><span class="line">        wait(<span class="literal">NULL</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="命名管道-mkfifo-3"><a href="#命名管道-mkfifo-3" class="headerlink" title="命名管道|mkfifo(3)"></a>命名管道|mkfifo(3)</h3><p>函数背景：在Unix-like系统中，FIFO (First In First Out)，也被称为命名管道(named pipe)，是一种特殊的文件类型。它提供了一种在不相关的进程之间进行通信的机制，和匿名管道（由pipe() 函数创建）相似，但其作为一个真实的文件存在于文件系统中，并且拥有一个路径名。为了创建这样的命名管道，我们使用 mkfifo() 函数。</p>
+<blockquote>
+<p>  <em>MKFIFO(3)</em></p>
+<p>  <em><strong>NAME</strong></em></p>
+<p>  ​       <em>mkfifo - make a FIFO special file (a named pipe)</em></p>
+<p>  <em><strong>SYNOPSIS</strong></em></p>
+<p>  ​       <em>#include &lt;sys&#x2F;types.h&gt;</em></p>
+<p>  ​       <em>#include &lt;sys&#x2F;stat.h&gt;</em></p>
+<p>  ​       <em>int mkfifo(const char *pathname, mode_t mode);</em></p>
+<p>  <em><strong>DESCRIPTION</strong></em></p>
+<p>  ​       <em>mkfifo()  makes  a  FIFO special file with name pathname.  mode specifies the FIFO’s permissions.  It is modified by the process’s umask in the usual  way:  the  permissions of the created file are (mode &amp; ~umask).</em></p>
+<p>  ​       <em>A  FIFO  special file is similar to a pipe, except that it is created in a different way.  Instead of being an anonymous communications channel, a FIFO special  file  is entered into the filesystem by calling mkfifo().</em></p>
+<p>  ​       <em>Once  you  have created a FIFO special file in this way, any process can open it for reading or writing, in the same way as an ordinary file.  However, it has to be open at  both ends simultaneously before you can proceed to do any input or output operations on it.  Opening a FIFO for reading normally blocks until  some  other  process opens  the  same FIFO for writing, and vice versa.  See fifo(7) for nonblocking handling of FIFO special files.</em></p>
+<p>  <em><strong>RETURN VALUE</strong></em></p>
+<p>  ​       <em>On success mkfifo() returns 0.  In the case of an  error,  -1  is  returned (in which case, errno is set appropriately).</em></p>
+</blockquote>
+<p>mkfifo() 函数用于创建一个新的FIFO文件，即命名管道。其他进程可以打开这个文件进行读或写操作，从而实现进程间通信。</p>
+<p>函数原型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/stat.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">mkfifo</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *pathname, <span class="type">mode_t</span> mode)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>参数说明：</p>
+<ul>
+<li><code>pathname</code>：FIFO文件的路径名。</li>
+<li><code>mode</code>：指定新文件的权限。常见的模式有<code>S_IRUSR</code>, <code>S_IWUSR</code>等，通常与umask函数的设置相结合。</li>
+</ul>
+<p>函数返回值：</p>
+<ul>
+<li>成功时，返回0。</li>
+<li>失败时，返回-1，并设置<code>errno</code>为相应的错误。</li>
+</ul>
+<p>注意事项：</p>
+<ol>
+<li>创建FIFO后，可以使用普通的文件I&#x2F;O函数（如open()，read()，write()等）来进行读写操作。</li>
+<li>在打开FIFO进行读或写操作时，可能会阻塞，直到另一端的进程也打开FIFO。例如，一个进程打开FIFO进行读操作可能会阻塞，直到另一个进程打开同一FIFO进行写操作。</li>
+<li>与普通的无名管道（由 pipe() 函数创建）不同，命名管道的两个端点可以在完全不相关的进程之间打开和关闭，而不仅仅是在父子进程之间。</li>
+<li>当不再需要FIFO时，可以使用 unlink() 或 remove() 函数来删除它。</li>
+<li>除了通过 mkfifo() ，命令行工具<code>mkfifo</code>也可以用于创建命名管道。</li>
+</ol>
+<p><strong>管道只有凑齐读写双方才算建立成功</strong>：<code>date &gt; mypipe</code> 和 <code>cat mypipe</code>单独执行时都会阻塞住。</p>
+<p><img src="https://flyingfox092-1300215590.cos.ap-shanghai.myqcloud.com/system-programming/sp6-mkfifo.png"></p>
+<h2 id="XSI-IPC"><a href="#XSI-IPC" class="headerlink" title="XSI-IPC"></a>XSI-IPC</h2><p>XSI IPC 是 Unix System V 的一个子集，是一套跨多种 Unix 系统版本都支持的进程间通信 (IPC) 机制。这套机制提供了三种基本的 IPC 形式：消息队列（Message Queues）、信号量（Semaphores）和共享内存（Shared Memory）。</p>
+<p><strong>消息队列（Message Queues）</strong></p>
+<p>功能：消息队列允许进程发送和接收具有类型的消息。这些消息排队，按照发送顺序或其类型被接收。</p>
+<p>主要函数：</p>
+<ul>
+<li><code>msgget()</code>：获取或创建一个消息队列。</li>
+<li><code>msgsnd()</code>：向消息队列中发送消息。</li>
+<li><code>msgrcv()</code>：从消息队列中接收消息。</li>
+<li><code>msgctl()</code>：控制消息队列的各种属性。</li>
+</ul>
+<p><strong>信号量（Semaphores）</strong></p>
+<p>功能：信号量主要用于同步和互斥，用于控制多个进程对共享资源的访问。它常用于解决竞态条件和确保在多进程环境中资源的安全访问。</p>
+<p>主要函数：</p>
+<ul>
+<li><code>semget()</code>：获取或创建一组信号量。</li>
+<li><code>semop()</code>：对一组信号量进行操作，如增加、减少或等待。</li>
+<li><code>semctl()</code>：控制信号量的各种属性。</li>
+</ul>
+<p><strong>共享内存（Shared Memory）</strong></p>
+<p>功能：共享内存允许多个进程共享一段内存区域。这是一种非常快速的 IPC 机制，因为数据不需要在进程之间复制。但是，通常需要使用信号量来同步对共享内存的访问。</p>
+<p>主要函数：</p>
+<ul>
+<li><code>shmget()</code>：获取或创建一个共享内存段。</li>
+<li><code>shmat()</code>：将共享内存段附加到进程的地址空间。</li>
+<li><code>shmdt()</code>：分离共享内存段。</li>
+<li><code>shmctl()</code>：控制共享内存段的各种属性。</li>
+</ul>
+<blockquote>
+<p>  xxxget()：用于创建</p>
+<p>  xxxop()：用于初始化等操作</p>
+<p>  xxxctl()：用于控制，销毁等操作</p>
+<p>  xxx：msg、sem、shm</p>
+</blockquote>
+<p>注意事项：</p>
+<ol>
+<li>对于所有的 XSI IPC 机制，都需要进行适当的清理，例如删除消息队列、信号量或共享内存段，以避免资源泄漏。</li>
+<li>虽然共享内存提供了一种高效的通信方式，但由于它允许多个进程直接访问相同的内存区域，所以必须小心同步。</li>
+<li>XSI IPC 资源有全局限制，如系统中可以有的最大消息队列数、信号量数和共享内存段数。</li>
+</ol>
+<h3 id="ftok-3"><a href="#ftok-3" class="headerlink" title="ftok(3)"></a>ftok(3)</h3><p>函数背景：在UNIX系统中，许多进程间通信（IPC）机制（如消息队列、信号量和共享内存）需要一个唯一的键（key）来区分不同的IPC对象。这通常通过硬编码一个固定的键来实现，但这种方法可能会导致键的冲突。ftok() 函数为我们提供了一种生成基于文件路径的、相对唯一的IPC键的方法。</p>
+<p>注：如果通信双方具有亲缘关系，就不需要进行key值的获取，直接创建匿名IPC就行，如果没有亲缘关系就需要创建key值。key值是为了让通信的双方拿到同一个通信机制。</p>
+<blockquote>
+<p>  <em>FTOK(3)</em></p>
+<p>  <em><strong>NAME</strong></em></p>
+<p>  ​	<em>ftok - convert a pathname and a project identifier to a System V IPC key</em></p>
+<p>  <em><strong>SYNOPSIS</strong></em></p>
+<p>  ​	<em>#include &lt;sys&#x2F;types.h&gt;</em></p>
+<p>  ​	<em>#include &lt;sys&#x2F;ipc.h&gt;</em></p>
+<p>  ​	<em>key_t ftok(const char *pathname, int proj_id);</em></p>
+<p>  <em><strong>DESCRIPTION</strong></em></p>
+<p>  ​	<em>The ftok() function uses the identity of the file named by the given pathname (which must refer to an existing, accessible file) and the  least  significant  8  bits  of proj_id  (which must be nonzero) to generate a key_t type System V IPC key, suitable for use with msgget(2), semget(2), or shmget(2).</em></p>
+<p>  ​	<em>The resulting value is the same for all pathnames that name the same file, when  the same value of proj_id is used.  The value returned should be different when the (simultaneously existing) files or the project IDs differ.</em></p>
+<p>  <em><strong>RETURN VALUE</strong></em></p>
+<p>  ​	<em>On success, the generated key_t value is returned.  On failure -1 is returned,  with errno indicating the error as for the stat(2) system call.</em></p>
+</blockquote>
+<p>ftok() 函数用于根据一个路径名和一个整型数生成一个唯一的 key 值，用于 System V IPC（Inter-process Communication，进程间通信）机制中的消息队列、共享内存和信号量的标识符生成。函数原型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/ipc.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">key_t</span> <span class="title function_">ftok</span><span class="params">(<span class="type">const</span> <span class="type">char</span> *pathname, <span class="type">int</span> proj_id)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>参数说明：</p>
+<ul>
+<li><code>pathname</code>：指定用于生成 key 值的路径名，可以是任何一个已存在文件的路径名；</li>
+<li><code>proj_id</code>：指定与 pathname 同级的整型 ID，范围为 0~255。在消息队列和共享内存中，一个 key 可以对应多个消息队列或共享内存区域，因此需要通过 proj_id 来进一步区分。</li>
+</ul>
+<p>函数返回值：</p>
+<ul>
+<li>成功时，返回生成的IPC键。</li>
+<li>失败时，返回-1，并设置<code>errno</code>为相应的错误。</li>
+</ul>
+<p>注意事项：</p>
+<ol>
+<li><strong>文件必须存在且可访问</strong>。如果文件不存在或者当前进程没有访问权限（注：ftok()需要获取文件的inode号），则ftok()函数将失败。</li>
+<li>proj_id必须是非零的整数。如果proj_id为0，则ftok()函数将失败。</li>
+<li>文件路径名的长度不能超过系统限制。通常情况下，文件路径名的长度不能超过255个字符。</li>
+<li>使用ftok()函数生成的键并不保证是唯一的。在不同的系统中，可能存在相同的文件路径和proj_id，这样就会导致生成相同的键。但在实践中生成相同 key 值的概率很小。而且如果多个进程或线程要使用同一个 System V IPC 对象，必须使用同一个 key 值。</li>
+</ol>
+<p>它虽然有一些限制，但是在合适的情况下，使用ftok()函数可以简化进程间通信的实现。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/ipc.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="type">key_t</span> key = ftok(<span class="string">&quot;/etc/services&quot;</span>, <span class="number">1</span>);</span><br><span class="line">    <span class="keyword">if</span> (key == <span class="number">-1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        perror(<span class="string">&quot;ftok()&quot;</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;Generated key: %d\n&quot;</span>, key);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="消息队列"><a href="#消息队列" class="headerlink" title="消息队列"></a>消息队列</h3><p>主动端：先发包的一方；</p>
+<p>被动端：先收包的一方（先运行）；</p>
+<p>函数背景：在Unix-like系统中，消息队列是进程间通信(IPC)的一种机制，允许进程发送和接收消息。这些消息可以根据发送顺序或它们的类型进行排列。为了创建或获取访问一个消息队列，我们使用 msgget() 函数。</p>
+<h4 id="msgget-2"><a href="#msgget-2" class="headerlink" title="msgget(2)"></a>msgget(2)</h4><blockquote>
+<p>  <em>MSGGET(2)</em></p>
+<p>  <em><strong>NAME</strong></em></p>
+<p>  ​       <em>msgget - get a System V message queue identifier</em></p>
+<p>  <em><strong>SYNOPSIS</strong></em></p>
+<p>  ​       <em>#include &lt;sys&#x2F;types.h&gt;</em></p>
+<p>  ​       <em>#include &lt;sys&#x2F;ipc.h&gt;</em></p>
+<p>  ​       <em>#include &lt;sys&#x2F;msg.h&gt;</em></p>
+<p>  ​       <em>int msgget(key_t key, int msgflg);</em></p>
+<p>  <em><strong>DESCRIPTION</strong></em></p>
+<p>  <em>The  msgget()  system  call returns the System V message queue identifier associated with the value of the key argument.  It may be used either to obtain the identifier of a  previously  created  message  queue  (when  msgflg  is  zero and key does not have the value IPC_PRIVATE), or to create a new set.</em></p>
+<p>  <em>A new message queue is created if key has the value IPC_PRIVATE or key isn’t IPC_PRIVATE, no message queue with the given key key exists, and IPC_CREAT is specified in msgflg.</em></p>
+<p>  <em>If  msgflg  specifies  both IPC_CREAT and IPC_EXCL and a message queue already exists for key, then msgget() fails with errno set to EEXIST.  (This is analogous to the  effect  of the combination O_CREAT | O_EXCL for open(2).)</em></p>
+<p>  <em>Upon  creation,  the least significant bits of the argument msgflg define the permissions of the message queue.  These permission bits have the same format and  semantics  as  the permissions specified for the mode argument of open(2).  (The execute permissions are not used.)</em></p>
+<p>  <em>If a new message queue is created, then its associated data structure msqid_ds  (see  msgctl(2)) is initialized as follows:</em></p>
+<p>  ​              <em>msg_perm.cuid  and  msg_perm.uid  are  set to the effective user ID of the calling process.</em></p>
+<p>  ​              <em>msg_perm.cgid and msg_perm.gid are set to the effective group ID  of  the  calling process.</em></p>
+<p>  ​              <em>The  least  significant 9 bits of msg_perm.mode are set to the least significant 9 bits of msgflg.</em></p>
+<p>  ​              <em>msg_qnum, msg_lspid, msg_lrpid, msg_stime, and msg_rtime are set to 0.</em></p>
+<p>  ​              <em>msg_ctime is set to the current time.</em></p>
+<p>  ​              <em>msg_qbytes is set to the system limit MSGMNB.</em></p>
+<p>  ​       <em>If the message queue already exists the permissions are verified, and a check is made  to see if it is marked for destruction.</em></p>
+<p>  <em><strong>RETURN VALUE</strong></em></p>
+<p>  ​       <em>If successful, the return value will be the message queue identifier (a nonnegative integer), otherwise -1 with errno indicating the error.</em></p>
+</blockquote>
+<p>msgget() 函数用于获取一个新的消息队列或访问一个已经存在的消息队列。</p>
+<p>函数原型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/ipc.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/msg.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">msgget</span><span class="params">(<span class="type">key_t</span> key, <span class="type">int</span> msgflg)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>参数说明：</p>
+<ul>
+<li><code>key</code>：这是消息队列的键，它可以是一个明确的值，或者使用<code>IPC_PRIVATE</code>创建一个新的私有消息队列。</li>
+<li><code>msgflg</code>：它是一个标志位集合，常用的标志包括：<ul>
+<li><code>IPC_CREAT</code>：如果消息队列不存在，则创建它。</li>
+<li><code>IPC_EXCL</code>：与<code>IPC_CREAT</code>一起使用，确保创建一个新的消息队列。如果消息队列已经存在，则失败。</li>
+<li>权限位：如<code>S_IRUSR</code>, <code>S_IWUSR</code>等，指定谁可以对消息队列执行读&#x2F;写操作。</li>
+</ul>
+</li>
+</ul>
+<p>函数返回值：</p>
+<ul>
+<li>成功时，返回消息队列的标识符（一个非负整数）。</li>
+<li>失败时，返回-1，并设置<code>errno</code>为相应的错误。</li>
+</ul>
+<p>注意事项：</p>
+<ol>
+<li>为了避免资源泄漏和其他进程无法访问消息队列，当不再需要消息队列时，应该使用 msgctl() 函数删除它。</li>
+<li>在高并发的环境中，可能需要处理由于消息队列满或其他原因导致的发送&#x2F;接收消息失败的情况。</li>
+<li>使用<code>IPC_PRIVATE</code>作为键可以确保创建一个新的私有消息队列，但这样的消息队列只能在父子进程之间共享。</li>
+<li>在使用 ftok() 生成键时，确保指定的文件存在并且对于生成的所有键都是唯一的。</li>
+</ol>
+<p>举个栗子：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// msgget.c</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/ipc.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/msg.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">key_t</span> key;</span><br><span class="line">	<span class="type">int</span> msqid;</span><br><span class="line">	</span><br><span class="line">	key =  ftok(<span class="string">&quot;/etc/services&quot;</span>, <span class="number">1</span>);</span><br><span class="line">	<span class="keyword">if</span>(key == <span class="number">-1</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		perror(<span class="string">&quot;ftok&quot;</span>);</span><br><span class="line">		<span class="built_in">exit</span>(EXIT_FAILURE);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;Generated IPC key: %d\n&quot;</span>, key);</span><br><span class="line"></span><br><span class="line">	msqid = msgget(key, IPC_CREAT | <span class="number">0660</span>);</span><br><span class="line">	<span class="keyword">if</span>(msqid == <span class="number">-1</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		perror(<span class="string">&quot;msgget&quot;</span>);</span><br><span class="line">		<span class="built_in">exit</span>(EXIT_FAILURE);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;Message Queue ID: %d\n&quot;</span>, msqid);</span><br><span class="line">	<span class="comment">// msgctl(msqid, IPC_RMID, NULL);	// 清理消息队列</span></span><br><span class="line"></span><br><span class="line">	<span class="built_in">exit</span>(EXIT_SUCCESS);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>编译运行结果如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">$ make msgget</span><br><span class="line">cc     msgget.c   -o msgget</span><br><span class="line">$ ./msgget</span><br><span class="line">Generated IPC key: 17105110</span><br><span class="line">Message Queue ID: 3</span><br><span class="line">$ ipcs</span><br><span class="line"></span><br><span class="line">------ Message Queues --------</span><br><span class="line">key        msqid      owner      perms      used-bytes   messages    </span><br><span class="line">0x010500d6 3          kernel     660        0            0           </span><br><span class="line"></span><br><span class="line">------ Shared Memory Segments --------</span><br><span class="line">key        shmid      owner      perms      bytes      nattch     status      </span><br><span class="line">0x00000000 6          kernel     600        524288     2          dest         </span><br><span class="line">0x00000000 10         kernel     600        524288     2          dest         </span><br><span class="line">0x00000000 15         kernel     600        524288     2          dest         </span><br><span class="line"></span><br><span class="line">------ Semaphore Arrays --------</span><br><span class="line">key        semid      owner      perms      nsems     </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="msgop-2"><a href="#msgop-2" class="headerlink" title="msgop(2)"></a>msgop(2)</h4><blockquote>
+<p>  <em>MSGOP(2)</em></p>
+<p>  <em><strong>NAME</strong></em></p>
+<p>  ​       <em>msgrcv, msgsnd - System V message queue operations</em></p>
+<p>  <em><strong>SYNOPSIS</strong></em></p>
+<p>  ​       <em>#include &lt;sys&#x2F;types.h&gt;</em></p>
+<p>  ​       <em>#include &lt;sys&#x2F;ipc.h&gt;</em></p>
+<p>  ​       <em>#include &lt;sys&#x2F;msg.h&gt;</em></p>
+<p>  ​       <em>int msgsnd(int msqid, const void *msgp, size_t msgsz, int msgflg);</em></p>
+<p>  ​       <em>ssize_t msgrcv(int msqid, void *msgp, size_t msgsz, long msgtyp, int msgflg);</em></p>
+<p>  <em><strong>DESCRIPTION</strong></em></p>
+<p>  ​       <em>The msgsnd() and msgrcv() system calls are used to send messages to, and receive messages from, a System V message queue.  The calling process must have write  permission  on  the message queue in order to send a message, and read permission to receive a message.</em></p>
+<p>  ​       <em>The  msgp  argument  is  a pointer to a caller-defined structure of the following general form:</em></p>
+<p>  ​           <em>struct msgbuf {</em></p>
+<p>  ​               <em>long mtype;       &#x2F;* message type, must be &gt; 0 *&#x2F;</em></p>
+<p>  ​               <em>char mtext[1];    &#x2F;* message data *&#x2F;</em></p>
+<p>  ​           <em>};</em></p>
+<p>  ​       <em>The mtext field is an array (or other structure) whose size is specified by msgsz, a non‐ negative  integer  value.   Messages of zero length (i.e., no mtext field) are permitted.</em></p>
+<p>  ​       <em>The mtype field must have a strictly positive integer value.  This value can be  used  by the receiving process for message selection (see the description of msgrcv() below).</em></p>
+<p>  <em><strong>msgsnd()</strong></em></p>
+<p>  ​       <em>The msgsnd() system call appends a copy of the message pointed to by msgp to the message queue whose identifier is specified by msqid.</em></p>
+<p>  ​       <em>If  sufficient  space  is  available  in  the queue, msgsnd() succeeds immediately.  The queue capacity is governed by the msg_qbytes field in the associated data structure for the message queue.  During queue creation this field is initialized to MSGMNB bytes, but this limit can be modified using msgctl(2).  A message queue is considered to be full if either of the  following conditions is true:</em></p>
+<ul>
+<li><p><em>Adding a new message to the queue would cause the total number of bytes in the queue to exceed the queue’s maximum size (the msg_qbytes field).</em></p>
+</li>
+<li><p><em>Adding  another  message to the queue would cause the total number of messages in the queue to exceed the queue’s maximum size (the msg_qbytes field).  This check is necessary to prevent an unlimited number of zero-length messages being placed on the queue.  Although such messages contain no data, they nevertheless consume (locked) kernel memory.</em></p>
+</li>
+</ul>
+<p>  ​       <em>If insufficient space is available in the queue, then the default behavior of msgsnd() is to block until space becomes available.  If IPC_NOWAIT is specified in msgflg, then the  call  instead fails with the error EAGAIN.</em></p>
+<p>  ​       <em>A blocked msgsnd() call may also fail if:</em></p>
+<ul>
+<li><p><em>the queue is removed, in which case the system call fails with errno set to EIDRM; or</em></p>
+</li>
+<li><p><em>a  signal  is  caught, in which case the system call fails with errno set to EINTR;see signal(7).  (msgsnd() is never automatically restarted after being interrupted by a signal handler, regardless of the setting of the SA_RESTART flag when establishing a signal handler.)</em></p>
+</li>
+</ul>
+<p>  ​       <em>Upon successful completion the message queue data structure is updated as follows:</em></p>
+<p>  ​              <em>msg_lspid is set to the process ID of the calling process.</em></p>
+<p>  ​              <em>msg_qnum is incremented by 1.</em></p>
+<p>  ​              <em>msg_stime is set to the current time.</em></p>
+<p>  <em><strong>msgrcv()</strong></em></p>
+<p>  ​       <em>The msgrcv() system call removes a message from the queue specified by msqid and places it in the buffer pointed to by msgp.</em></p>
+<p>  ​       <em>The argument msgsz specifies the maximum size in bytes for the member mtext of the structure pointed to by the msgp argument.  If the message text has length greater than msgsz,  then  the behavior  depends on whether MSG_NOERROR is specified in msgflg.  If MSG_NOERROR is specified, then the message text will be truncated (and the truncated part will be lost); if MSG_NOERROR is not specified, then the message isn’t removed from the queue and the system call fails returning -1 with errno set to E2BIG.</em></p>
+<p>  ​       <em>Unless MSG_COPY is specified in msgflg (see below), the msgtyp argument specifies the type of message requested, as follows:</em></p>
+<ul>
+<li><p><em>If msgtyp is 0, then the first message in the queue is read.</em></p>
+</li>
+<li><p><em>If msgtyp is greater than 0, then the first message in the queue of type msgtyp is read, unless MSG_EXCEPT was specified in msgflg, in which case the first message in the queue  of  type not equal to msgtyp will be read.</em></p>
+</li>
+<li><p><em>If msgtyp is less than 0, then the first message in the queue with the lowest type less than or equal to the absolute value of msgtyp will be read.</em></p>
+</li>
+</ul>
+<p>  ​       <em>The msgflg argument is a bit mask constructed by ORing together zero or more of the following flags:</em></p>
+<p>  <em><strong>IPC_NOWAIT</strong></em></p>
+<p>  ​              <em>Return immediately if no message of the requested type is in the queue.  The system call fails with errno set to ENOMSG.</em></p>
+<p>  <em><strong>MSG_COPY</strong></em> <em>(since Linux 3.8)</em></p>
+<p>  ​              <em>Nondestructively fetch a copy of the message at the ordinal position in the queue specified by msgtyp (messages are considered to be numbered starting at 0).</em></p>
+<p>  ​              <em>This  flag  must be specified in conjunction with IPC_NOWAIT, with the result that, if there is no message available at the given position, the call fails immediately with the error ENOMSG.  Because they alter the meaning of msgtyp in orthogonal ways, MSG_COPY and MSG_EXCEPT may not both be specified in msgflg.</em></p>
+<p>  ​              <em>The MSG_COPY flag was added for the implementation of the kernel checkpoint-restore facility and is available only if the kernel was built with the CONFIG_CHECKPOINT_RESTORE option.</em></p>
+<p>  <em><strong>MSG_EXCEPT</strong></em> <em>Used with msgtyp greater than 0 to read the first message in the queue with message type that differs from msgtyp.</em></p>
+<p>  <em><strong>MSG_NOERROR</strong></em> <em>To truncate the message text if longer than msgsz bytes.</em></p>
+<p>  ​       <em>If no message of the requested type is available and IPC_NOWAIT isn’t specified in msgflg, the calling process is blocked until one of the following conditions occurs:</em></p>
+<ul>
+<li><p><em>A message of the desired type is placed in the queue.</em></p>
+</li>
+<li><p><em>The message queue is removed from the system.  In this case, the system call fails with errno set to EIDRM.</em></p>
+</li>
+<li><p><em>The calling process catches a signal.  In this case, the system call fails with errno set to EINTR.  (msgrcv() is never automatically restarted after being interrupted by a  signal  handler, regardless of the setting of the SA_RESTART flag when establishing a signal handler.)</em></p>
+</li>
+</ul>
+<p>  ​       <em>Upon successful completion the message queue data structure is updated as follows:</em></p>
+<p>  ​              <em>msg_lrpid is set to the process ID of the calling process.</em></p>
+<p>  ​              <em>msg_qnum is decremented by 1.</em></p>
+<p>  ​              <em>msg_rtime is set to the current time.</em></p>
+<p>  <em><strong>RETURN VALUE</strong></em></p>
+<p>  ​       <em>On failure both functions return -1 with errno indicating the error, otherwise msgsnd() returns 0 and msgrcv() returns the number of bytes actually copied into the mtext array.</em></p>
+</blockquote>
+<h5 id="msgsnd-2"><a href="#msgsnd-2" class="headerlink" title="msgsnd(2)"></a>msgsnd(2)</h5><p>msgsnd()函数用于将消息发送到消息队列。函数原型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/ipc.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/msg.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">msgsnd</span><span class="params">(<span class="type">int</span> msqid, <span class="type">const</span> <span class="type">void</span> *msgp, <span class="type">size_t</span> msgsz, <span class="type">int</span> msgflg)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>参数说明：</p>
+<ul>
+<li><code>msqid</code>：消息队列标识符，通常由 msgget() 返回。</li>
+<li><code>msgp</code>：指向要发送消息的指针。</li>
+<li><code>msgsz</code>：消息的大小，不包括消息类型。</li>
+<li><code>msgflg</code>：标志位集合。例如, <code>IPC_NOWAIT</code> 用于设置非阻塞发送。</li>
+</ul>
+<p>函数返回值：</p>
+<ul>
+<li>成功时，返回0。</li>
+<li>失败时，返回-1，并设置<code>errno</code>为相应的错误。</li>
+</ul>
+<h5 id="msgrcv-2"><a href="#msgrcv-2" class="headerlink" title="msgrcv(2)"></a>msgrcv(2)</h5><p>msgrcv() 函数用于从消息队列中接收消息。函数原型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/ipc.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/msg.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">ssize_t</span> <span class="title function_">msgrcv</span><span class="params">(<span class="type">int</span> msqid, <span class="type">void</span> *msgp, <span class="type">size_t</span> msgsz, <span class="type">long</span> msgtyp, <span class="type">int</span> msgflg)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>参数说明：</p>
+<ul>
+<li><code>msqid</code>：消息队列标识符。</li>
+<li><code>msgp</code>：指向存放接收消息的缓冲区的指针。</li>
+<li><code>msgsz</code>：缓冲区的大小，不包括消息类型。</li>
+<li><code>msgtyp</code>：要接收消息的类型。如果为0，则接收第一个可用的消息。</li>
+<li><code>msgflg</code>：标志位集合。例如, <code>IPC_NOWAIT</code> 用于设置非阻塞接收。</li>
+</ul>
+<p>函数返回值：</p>
+<ul>
+<li>成功时，返回接收到的消息的大小。</li>
+<li>失败时，返回-1，并设置<code>errno</code>为相应的错误。</li>
+</ul>
+<p>消息队列是双工的。消息队列这个机制严格来讲不是队列，问题就体现在 <code>long msgtyp</code> 这个参数上，该参数字面意义上是“接收的消息类型”。是否要挑消息来收，比如说当前消息队列中有10个包，msgtyp在正常范围内指的是要收取哪个包，相当于是包的编号，比如说10个包要收第3个，其它包还按当前顺序在队列中排队，而我们之前提到的队列、管道是没有这个特点的，遵循严格意义上的先进先出。</p>
+<p>举个栗子：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// msgop.c</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/ipc.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/msg.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;string.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">message</span>&#123;</span></span><br><span class="line">	<span class="type">long</span> mtype;		<span class="comment">// 消息类型</span></span><br><span class="line">	<span class="type">char</span> mtext[<span class="number">100</span>];	<span class="comment">// 消息内容</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">key_t</span> key;</span><br><span class="line">	<span class="type">int</span> msqid;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">message</span> <span class="title">msg</span>, <span class="title">rcv</span>;</span></span><br><span class="line">	</span><br><span class="line">	key =  ftok(<span class="string">&quot;/etc/services&quot;</span>, <span class="number">1</span>);</span><br><span class="line">	<span class="keyword">if</span>(key == <span class="number">-1</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		perror(<span class="string">&quot;ftok&quot;</span>);</span><br><span class="line">		<span class="built_in">exit</span>(EXIT_FAILURE);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;Generated IPC key: %d\n&quot;</span>, key);</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 创建消息队列</span></span><br><span class="line">	msqid = msgget(key, IPC_CREAT | <span class="number">0660</span>);</span><br><span class="line">	<span class="keyword">if</span>(msqid == <span class="number">-1</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		perror(<span class="string">&quot;msgget&quot;</span>);</span><br><span class="line">		<span class="built_in">exit</span>(EXIT_FAILURE);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;Message Queue ID: %d\n&quot;</span>, msqid);</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 发送消息</span></span><br><span class="line">	msg.mtype = <span class="number">1</span>;</span><br><span class="line">	<span class="built_in">strncpy</span>(msg.mtext, <span class="string">&quot;Hello,IPC.&quot;</span>, <span class="keyword">sizeof</span>(msg.mtext)); <span class="comment">// 设置消息内容</span></span><br><span class="line">	<span class="keyword">if</span>(msgsnd(msqid, &amp;msg, <span class="keyword">sizeof</span>(msg.mtext), <span class="number">0</span>) == <span class="number">-1</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		perror(<span class="string">&quot;msgsnd&quot;</span>);</span><br><span class="line">		<span class="built_in">exit</span>(EXIT_FAILURE);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;Message sent: %s\n&quot;</span>, msg.mtext);</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 接收消息</span></span><br><span class="line">	<span class="keyword">if</span>(msgrcv(msqid, &amp;rcv, <span class="keyword">sizeof</span>(rcv.mtext), msg.mtype, <span class="number">0</span>) == <span class="number">-1</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		perror(<span class="string">&quot;msgrcv&quot;</span>);</span><br><span class="line">		<span class="built_in">exit</span>(EXIT_FAILURE);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;Message received: %s\n&quot;</span>, msg.mtext);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">exit</span>(EXIT_SUCCESS);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>编译运行结果如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ make msgop</span><br><span class="line">cc     msgop.c   -o msgop</span><br><span class="line">$ ./msgop</span><br><span class="line">Generated IPC key: <span class="number">17105110</span></span><br><span class="line">Message Queue ID: <span class="number">3</span></span><br><span class="line">Message sent: Hello,IPC.</span><br><span class="line">Message received: Hello,IPC.</span><br></pre></td></tr></table></figure>
+
+<h4 id="msgctl-2"><a href="#msgctl-2" class="headerlink" title="msgctl(2)"></a>msgctl(2)</h4><p>函数背景：在Unix-like系统中，为了维护消息队列的生命周期和属性，需要有一个机制。这就是 msgctl() 函数的作用。它允许我们查询、设置或销毁消息队列。函数原型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/ipc.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/msg.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">msgctl</span><span class="params">(<span class="type">int</span> msqid, <span class="type">int</span> cmd, <span class="keyword">struct</span> msqid_ds *buf)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>参数说明：</p>
+<ul>
+<li><code>msqid</code>：消息队列标识符，通常由 msgget() 返回。</li>
+<li><code>cmd</code>：要执行的操作命令。常见的命令有：<ul>
+<li><code>IPC_STAT</code>: 用<code>buf</code>获取消息队列的当前属性。</li>
+<li><code>IPC_SET</code>: 设置消息队列的属性为<code>buf</code>所指定的值。</li>
+<li><code>IPC_RMID</code>: 删除消息队列。</li>
+</ul>
+</li>
+<li><code>buf</code>：一个指向<code>msqid_ds</code>结构的指针，该结构保存消息队列的属性。</li>
+</ul>
+<p>函数返回值：</p>
+<ul>
+<li>成功时，返回0。</li>
+<li>失败时，返回-1，并设置<code>errno</code>为相应的错误。</li>
+</ul>
+<p>举个栗子：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// msgctl.c</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/ipc.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/msg.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">key_t</span> key;</span><br><span class="line">	<span class="type">int</span> msqid;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">msqid_ds</span> <span class="title">buf</span>;</span></span><br><span class="line">	</span><br><span class="line">	key =  ftok(<span class="string">&quot;/etc/services&quot;</span>, <span class="number">1</span>);</span><br><span class="line">	<span class="keyword">if</span>(key == <span class="number">-1</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		perror(<span class="string">&quot;ftok&quot;</span>);</span><br><span class="line">		<span class="built_in">exit</span>(EXIT_FAILURE);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;Generated IPC key: %d\n&quot;</span>, key);</span><br><span class="line"></span><br><span class="line">	msqid = msgget(key, IPC_CREAT | <span class="number">0660</span>);</span><br><span class="line">	<span class="keyword">if</span>(msqid == <span class="number">-1</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		perror(<span class="string">&quot;msgget&quot;</span>);</span><br><span class="line">		<span class="built_in">exit</span>(EXIT_FAILURE);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;Message Queue ID: %d\n&quot;</span>, msqid);</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 获取消息队列属性</span></span><br><span class="line">	<span class="keyword">if</span>(msgctl(msqid, IPC_STAT, &amp;buf) == <span class="number">-1</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		perror(<span class="string">&quot;msgctl IPC_STAT&quot;</span>);</span><br><span class="line">		<span class="built_in">exit</span>(EXIT_FAILURE);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;Number of messages in queue: %lu\n&quot;</span>, buf.msg_qnum);</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 删除消息队列</span></span><br><span class="line">	<span class="keyword">if</span>(msgctl(msqid, IPC_RMID, <span class="literal">NULL</span>) == <span class="number">-1</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		perror(<span class="string">&quot;msgctl IPC_RMID&quot;</span>);</span><br><span class="line">		<span class="built_in">exit</span>(EXIT_FAILURE);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">exit</span>(EXIT_SUCCESS);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>编译运行结果如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ make msgctl</span><br><span class="line">cc     msgctl.c   -o msgctl</span><br><span class="line">$ ./msgctl</span><br><span class="line">Generated IPC key: 17105110</span><br><span class="line">Message Queue ID: 5</span><br><span class="line">Number of messages <span class="keyword">in</span> queue: 0</span><br></pre></td></tr></table></figure>
+
+<h3 id="信号量"><a href="#信号量" class="headerlink" title="信号量"></a>信号量</h3><p>在多任务环境中，多个进程可能会尝试同时访问某一共享资源，如共享内存、文件或其他共享数据结构。这种并发访问可能导致数据不一致或其他不可预测的结果。为了防止这种情况，需要一种机制来同步进程的行为，确保任何时候只有一个进程能访问该资源。这就是信号量的主要用途。</p>
+<p>信号量功能：信号量基本上是一个整数值，它有三个基本操作：</p>
+<ol>
+<li>初始化 (P)：设置信号量的初始值。</li>
+<li>等待 (V)：如果信号量的值大于零，就将其减少。否则，进程会睡眠，直到信号量大于零。</li>
+<li>释放 (S)：增加信号量的值。如果有其他进程在等待该信号量，它可能会被唤醒。</li>
+</ol>
+<p>通过这些基本操作，信号量提供了一种限制对共享资源并发访问的方式。</p>
+<p>在UNIX和Linux系统中，常见的信号量API包括 semget(), semop() 和 semctl() 等。</p>
+<ul>
+<li>semget()：获取一个信号量集。</li>
+<li>semop()：在一个或多个信号量上执行操作。</li>
+<li>semctl()：直接控制信号量信息。</li>
+</ul>
+<p>注意事项：</p>
+<ol>
+<li>信号量通常用于短期锁定，如果需要长时间锁定资源，考虑使用其他同步机制。</li>
+<li>尝试避免死锁，即两个或多个进程无限期地等待一个资源集，而这个资源集中的每个资源都被该进程集中的一个进程所持有。</li>
+<li>考虑使用更高级的同步原语，如互斥锁或条件变量，这可能更适合某些场景。</li>
+<li>当不再需要信号量时，使用 semctl() 与 IPC_RMID 命令确保删除它，以释放系统资源。</li>
+</ol>
+<h4 id="semget-2"><a href="#semget-2" class="headerlink" title="semget(2)"></a>semget(2)</h4><p>函数背景：在多任务环境中，需要有一种方式来保证多个进程不会同时访问某个共享资源，以防止可能的数据冲突或不一致。这正是信号量的目的，为了能够访问这些信号量并对其进行操作，semget() 函数被引入，它允许使用者创建新的信号量集或获取现有的信号量集。</p>
+<blockquote>
+<p>  <em>SEMGET(2)</em></p>
+<p>  <em><strong>NAME</strong></em></p>
+<p>  ​       <em>semget - get a System V semaphore set identifier</em></p>
+<p>  <em><strong>SYNOPSIS</strong></em></p>
+<p>  ​       <em>#include &lt;sys&#x2F;types.h&gt;</em></p>
+<p>  ​       <em>#include &lt;sys&#x2F;ipc.h&gt;</em></p>
+<p>  ​       <em>#include &lt;sys&#x2F;sem.h&gt;</em></p>
+<p>  ​       <em>int semget(key_t key, int nsems, int semflg);</em></p>
+<p>  <em><strong>DESCRIPTION</strong></em></p>
+<p>  ​       <em>The  semget()  system call returns the System V semaphore set identifier associated with the argument key.  It may be used either to obtain the identifier of a previously created semaphore set (when semflg is zero and key does not have the value IPC_PRIVATE), or to create a new set.</em></p>
+<p>  ​       <em>A new set of nsems semaphores is created if key has the value IPC_PRIVATE or if no existing semaphore set is associated with key and IPC_CREAT is specified in semflg.</em></p>
+<p>  ​       <em>If semflg specifies both IPC_CREAT and IPC_EXCL and a semaphore set already exists for key, then semget() fails with errno set to EEXIST.  (This is analogous to the effect of the  combination O_CREAT | O_EXCL for open(2).)</em></p>
+<p>  ​       <em>Upon  creation,  the  least  significant 9 bits of the argument semflg define the permissions (for owner, group and others) for the semaphore set.  These bits have the same format, and the same meaning, as the mode argument of open(2) (though the execute permissions are not meaningful for semaphores, and write permissions mean permission to alter semaphore values).</em></p>
+<p>  ​       <em>When creating a new semaphore set, semget() initializes the set’s associated data structure, semid_ds (see semctl(2)), as follows:</em></p>
+<p>  ​              <em>sem_perm.cuid and sem_perm.uid are set to the effective user ID of the calling process.</em></p>
+<p>  ​              <em>sem_perm.cgid and sem_perm.gid are set to the effective group ID of the calling process.</em></p>
+<p>  ​              <em>The least significant 9 bits of sem_perm.mode are set to the least significant 9 bits of semflg.</em></p>
+<p>  ​              <em>sem_nsems is set to the value of nsems.</em></p>
+<p>  ​              <em>sem_otime is set to 0.</em></p>
+<p>  ​              <em>sem_ctime is set to the current time.</em></p>
+<p>  ​       <em>The argument nsems can be 0 (a don’t care) when a semaphore set is not being created.  Otherwise, nsems must be greater than 0 and less than or equal to the maximum  number  of  semaphores per semaphore set (SEMMSL).</em></p>
+<p>  ​       <em>If the semaphore set already exists, the permissions are verified.</em></p>
+<p>  <em><strong>RETURN VALUE</strong></em></p>
+<p>  ​       <em>If successful, the return value will be the semaphore set identifier (a nonnegative integer), otherwise, -1 is returned, with errno indicating the error.</em></p>
+</blockquote>
+<p>semget() 函数用于获取一个已存在的信号量集的标识符或创建一个新的信号量集。</p>
+<p>函数原型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/ipc.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/sem.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">semget</span><span class="params">(<span class="type">key_t</span> key, <span class="type">int</span> nsems, <span class="type">int</span> semflg)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>参数说明：</p>
+<ul>
+<li><code>key</code>：用于标识信号量集的键。可以使用 ftok() 函数来生成这个键。</li>
+<li><code>nsems</code>：指定信号量集中的信号量数。如果只是获取现有的信号量集，此参数可以为0。</li>
+<li><code>semflg</code>：定义了一些标志和权限。常用的标志有：<ul>
+<li><code>IPC_CREAT</code>：如果指定的信号量集不存在，则创建它。</li>
+<li><code>IPC_EXCL</code>：与<code>IPC_CREAT</code>一同使用，确保创建一个全新的信号量集。如果信号量集已存在，则返回错误。</li>
+</ul>
+</li>
+</ul>
+<p>函数返回值：</p>
+<ul>
+<li>成功时，返回一个非负整数，这是信号量集的标识符；</li>
+<li>失败时，返回-1，并设置<code>errno</code>为相应的错误代码。</li>
+</ul>
+<h4 id="semop-2"><a href="#semop-2" class="headerlink" title="semop(2)"></a>semop(2)</h4><blockquote>
+<p>  <em>SEMOP(2)</em></p>
+<p>  <em><strong>NAME</strong></em></p>
+<p>  ​       <em>semop, semtimedop - System V semaphore operations</em></p>
+<p>  <em><strong>SYNOPSIS</strong></em></p>
+<p>  ​       <em>#include &lt;sys&#x2F;types.h&gt;</em></p>
+<p>  ​       <em>#include &lt;sys&#x2F;ipc.h&gt;</em></p>
+<p>  ​       <em>#include &lt;sys&#x2F;sem.h&gt;</em></p>
+<p>  ​       <em>int semop(int semid, struct sembuf *sops, size_t nsops);</em></p>
+<p>  ​       <em>int semtimedop(int semid, struct sembuf *sops, size_t nsops, const struct timespec *timeout);</em></p>
+<p>   <em>Feature Test Macro Requirements for glibc (see feature_test_macros(7)):</em></p>
+<p>  ​       <em>semtimedop(): _GNU_SOURCE</em></p>
+<p>  <em><strong>DESCRIPTION</strong></em></p>
+<p>  ​       <em>Each semaphore in a System V semaphore set has the following associated values:</em></p>
+<p>  ​           <em>unsigned short  semval;   &#x2F;* semaphore value *&#x2F;</em></p>
+<p>  ​           <em>unsigned short  semzcnt;  &#x2F;* # waiting for zero *&#x2F;</em></p>
+<p>  ​           <em>unsigned short  semncnt;  &#x2F;* # waiting for increase *&#x2F;</em></p>
+<p>  ​           <em>pid_t           sempid;   &#x2F;* PID of process that last</em></p>
+<p>  <em><strong>semop</strong>()  performs operations on selected semaphores in the set indicated by semid.  Each of the nsops elements in the array pointed to by sops is a structure that specifies an operation to be performed on a single semaphore.  The elements of this structure are of type struct sembuf, containing the following members:</em></p>
+<p>  ​           <em>unsigned short sem_num;  &#x2F;* semaphore number *&#x2F;</em></p>
+<p>  ​           <em>short          sem_op;   &#x2F;* semaphore operation *&#x2F;</em></p>
+<p>  ​           <em>short          sem_flg;  &#x2F;* operation flags *&#x2F;</em></p>
+<p>  ​       <em>Flags recognized in sem_flg are IPC_NOWAIT and SEM_UNDO.  If an operation specifies SEM_UNDO, it will be automatically undone when the process terminates.</em></p>
+<p>  ​       <em>The set of operations contained in sops is performed in array order, and atomically, that is, the operations are performed either as a complete unit, or not at all.  The  behavior  of  the system call if not all operations can be performed immediately depends on the presence of the IPC_NOWAIT flag in the individual sem_flg fields, as noted below.</em></p>
+<p>  ​       <em>Each  operation is performed on the sem_num-th semaphore of the semaphore set, where the first semaphore of the set is numbered 0.  There are three types of operation, distinguished by the value of sem_op.</em></p>
+<p>  ​       <em>If sem_op is a positive integer, the operation adds this value to the semaphore value (semval).  Furthermore, if  SEM_UNDO is specified for this operation, the system  subtracts  the  value sem_op from the semaphore adjustment (semadj) value for this semaphore.  This operation can always proceed—it never forces a thread to wait.  The calling process must have alter permission on the semaphore set.</em></p>
+<p>  ​       <em>If sem_op is zero, the process must have read permission on the semaphore set.  This is a “wait-for-zero” operation: if semval is zero, the operation can immediately  proceed.   Otherwise, if  IPC_NOWAIT  is  specified  in sem_flg, semop() fails with errno set to EAGAIN (and none of the operations in sops is performed).  Otherwise, semzcnt (the count of threads waiting until this semaphore’s value becomes zero) is incremented by one and the thread sleeps until one of the following occurs:</em></p>
+<p>  ​       <em>•  semval becomes 0, at which time the value of semzcnt is decremented.</em></p>
+<p>  ​       <em>•  The semaphore set is removed: semop() fails, with errno set to EIDRM.</em></p>
+<p>  ​       <em>•  The calling thread catches a signal: the value of semzcnt is decremented and semop() fails, with errno set to EINTR.</em></p>
+<p>  ​       <em>If sem_op is less than zero, the process must have alter permission on the semaphore set.  If semval is greater than or equal to the absolute value of sem_op, the operation can proceed immediately:  the  absolute value of sem_op is subtracted from semval, and, if SEM_UNDO is specified for this operation, the system adds the absolute value of sem_op to the semaphore adjustment (semadj) value for this semaphore.  If the absolute value of sem_op is greater than semval, and IPC_NOWAIT is specified in sem_flg, semop() fails, with errno set to EAGAIN  (and  none of  the  operations in sops is performed).  Otherwise, semncnt (the counter of threads waiting for this semaphore’s value to increase) is incremented by one and the thread sleeps until one of the following occurs:</em></p>
+<p>  ​       <em>•  semval becomes greater than or equal to the absolute value of sem_op: the operation now proceeds, as described above.</em></p>
+<p>  ​       <em>•  The semaphore set is removed from the system: semop() fails, with errno set to EIDRM.</em></p>
+<p>  ​       <em>•  The calling thread catches a signal: the value of semncnt is decremented and semop() fails, with errno set to EINTR.</em></p>
+<p>  ​       <em>On successful completion, the sempid value for each semaphore specified in the array pointed to by sops is set to the caller’s process ID.  In addition, the sem_otime is set to the current time.</em></p>
+<p>  <em><strong>semtimedop()</strong></em></p>
+<p>  ​       <em>semtimedop()  behaves  identically to semop() except that in those cases where the calling thread would sleep, the duration of that sleep is limited by the amount of elapsed time specified by the timespec structure whose address is passed in the timeout argument.  (This sleep interval will be rounded up to the system clock granularity, and kernel scheduling delays mean  that the  interval  may overrun by a small amount.)  If the specified time limit has been reached, semtimedop() fails with errno set to EAGAIN (and none of the operations in sops is performed).</em></p>
+<p>  ​       <em>If the timeout argument is NULL, then semtimedop() behaves exactly like semop().</em></p>
+<p>  ​       <em>Note that if semtimedop() is interrupted by a signal, causing the call to fail with the error EINTR, the contents of timeout are left unchanged.</em></p>
+<p>  <em><strong>RETURN VALUE</strong></em></p>
+<p>  ​       <em>If successful, semop() and semtimedop() return 0; otherwise they return -1 with errno indicating the error.</em></p>
+</blockquote>
+<p>semop() 函数允许进程在一个或多个信号量上执行原子操作，在信号量上执行P操作（减少信号量值）和V操作（增加信号量值）。</p>
+<p>函数原型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/ipc.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/sem.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">semop</span><span class="params">(<span class="type">int</span> semid, <span class="keyword">struct</span> sembuf *sops, <span class="type">size_t</span> nsops)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>参数说明如下：</p>
+<ul>
+<li><code>semid</code>：信号量集标识符，由 semget() 返回。</li>
+<li><code>sops</code>：指向<code>sembuf</code>结构数组的指针，描述要在信号量上执行的操作。</li>
+<li><code>nsops</code>：<code>sops</code>数组中的元素数量。</li>
+</ul>
+<p><code>sembuf</code>结构定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">sembuf</span> &#123;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">short</span> sem_num;  <span class="comment">// 信号量集中的信号量编号（从0开始）</span></span><br><span class="line">    <span class="type">short</span> sem_op;            <span class="comment">// 信号量操作。正值表示V操作，负值表示P操作，0用于检查信号量是否为0</span></span><br><span class="line">    <span class="type">short</span> sem_flg;           <span class="comment">// 操作标志，例如SEM_UNDO</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>函数返回值：</p>
+<ul>
+<li>成功时，返回0；</li>
+<li>失败时，返回-1，并设置<code>errno</code>为相应的错误代码。</li>
+</ul>
+<h4 id="semctl-2"><a href="#semctl-2" class="headerlink" title="semctl(2)"></a>semctl(2)</h4><p>函数背景：在多进程环境中，为了实现进程之间的同步和资源共享，需要一种方法来管理和控制信号量的状态和权限。semctl() 就是为这个目的而设计的。</p>
+<blockquote>
+<p>  <em>SEMCTL(2)</em></p>
+<p>  <em><strong>NAME</strong></em></p>
+<p>  ​       <em>semctl - System V semaphore control operations</em></p>
+<p>  <em><strong>SYNOPSIS</strong></em></p>
+<p>  ​       <em>#include &lt;sys&#x2F;types.h&gt;</em></p>
+<p>  ​       <em>#include &lt;sys&#x2F;ipc.h&gt;</em></p>
+<p>  ​       <em>#include &lt;sys&#x2F;sem.h&gt;</em></p>
+<p>  ​       <em>int semctl(int semid, int semnum, int cmd, …);</em></p>
+<p>  <em><strong>DESCRIPTION</strong></em></p>
+<p>  ​       <em>semctl()  performs  the  control operation specified by cmd on the System V semaphore set identified by semid, or on the semnum-th semaphore of that set.  (The semaphores in a set are numbered starting at 0.)</em></p>
+<p>  <em><strong>RETURN VALUE</strong></em></p>
+<p>  ​       <em>On failure, semctl() returns -1 with errno indicating the error.</em></p>
+<p>  ​       <em>Otherwise, the system call returns a nonnegative value depending on cmd as follows:</em></p>
+<p>  ​       <em>GETNCNT</em>   <em>the value of semncnt.</em></p>
+<p>  ​       <em>GETPID</em>    <em>the value of sempid.</em></p>
+<p>  ​       <em>GETVAL</em>    <em>the value of semval.</em></p>
+<p>  ​       <em>GETZCNT</em>   <em>the value of semzcnt.</em></p>
+<p>  ​       <em>IPC_INFO  the  index  of  the  highest  used  entry  in the kernel’s internal array recording information about all semaphore sets.  (This information can be used with repeated SEM_STAT or SEM_STAT_ANY operations to obtain information about all semaphore sets on the system.)</em></p>
+<p>  ​       <em>SEM_INFO  as for IPC_INFO.</em></p>
+<p>  ​       <em>SEM_STAT  the identifier of the semaphore set whose index was given in semid.</em></p>
+<p>  ​       <em>SEM_STAT_ANY as for SEM_STAT.</em></p>
+<p>  ​       <em>All other cmd values return 0 on success.</em></p>
+</blockquote>
+<p>semctl()函数允许用户设置信号量的值、获取其值、更改权限、删除信号量等。</p>
+<p>函数原型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/ipc.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/sem.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">semctl</span><span class="params">(<span class="type">int</span> semid, <span class="type">int</span> semnum, <span class="type">int</span> cmd, ...)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>参数说明：</p>
+<ul>
+<li><code>semid</code>：信号量集标识符，由 semget() 返回。</li>
+<li><code>semnum</code>：信号量集中的信号量编号，用于指定在哪个特定信号量上执行操作。</li>
+<li><code>cmd</code>：指定要执行的操作。常见的命令有<code>SETVAL</code>（设置信号量的值）、<code>GETVAL</code>（获取信号量的值）、<code>IPC_RMID</code>（删除信号量）等。</li>
+<li><code>...</code>：根据<code>cmd</code>的值，此参数可能是必需的。例如，当使用<code>SETVAL</code>时，需要提供要设置的值。</li>
+</ul>
+<p>函数返回值：</p>
+<ul>
+<li>成功时，根据<code>cmd</code>的值返回不同的结果，例如，对于<code>GETVAL</code>，它返回信号量的当前值；</li>
+<li>失败时，返回-1，并设置<code>errno</code>为相应的错误代码。</li>
+</ul>
+<p>函数使用示例：</p>
+<p>（1）设置信号量的值：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> value = <span class="number">10</span>;</span><br><span class="line"><span class="keyword">if</span> (semctl(semid, <span class="number">0</span>, SETVAL, value) == <span class="number">-1</span>) &#123;</span><br><span class="line">    perror(<span class="string">&quot;semctl SETVAL&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>（2）获取信号量的值：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> value;</span><br><span class="line">value = semctl(semid, <span class="number">0</span>, GETVAL);</span><br><span class="line"><span class="keyword">if</span> (value == <span class="number">-1</span>) &#123;</span><br><span class="line">    perror(<span class="string">&quot;semctl GETVAL&quot;</span>);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;Semaphore value: %d\n&quot;</span>, value);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>（3）删除信号量：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (semctl(semid, <span class="number">0</span>, IPC_RMID) == <span class="number">-1</span>) &#123;</span><br><span class="line">    perror(<span class="string">&quot;semctl IPC_RMID&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注意事项：</p>
+<ol>
+<li>使用 semctl() 修改信号量或执行其他操作时应特别小心，确保不会意外地中断其他正在使用该信号量的进程。</li>
+<li>在使用 semctl() 删除信号量之前，应确保没有其他进程正在或计划使用它。</li>
+<li>当使用信号量进行进程间同步时，始终确保在程序结束时或在不再需要信号量时清理和删除它，以防止资源泄露。</li>
+<li>semctl() 的行为可能会因平台或操作系统的不同而略有变化，因此在移植代码时要小心。</li>
+</ol>
+<p>举个栗子：</p>
+<p>之前在介绍线程相关内容时，有如下案例：</p>
+<blockquote>
+<p>  使用20个线程分别对同一个文件进行如下操作：打开，读取数据，加1，覆盖写回去，关闭文件。</p>
+</blockquote>
+<p>当时介绍了 “多线程+互斥量”（add_mutex.c）的方式，接下来使用 “多线程+信号量”（add_sem.c）的方式重构这个程序。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// add_sem.c</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;string.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/wait.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/ipc.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/sem.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;errno.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> PROCNUM 	20</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> LINESIZE 	1024</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> FNAME 		<span class="string">&quot;/tmp/out&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">int</span> semid;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">P</span><span class="params">(<span class="type">void</span>)</span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sembuf</span> <span class="title">op</span>;</span></span><br><span class="line"></span><br><span class="line">    op.sem_num = <span class="number">0</span>;</span><br><span class="line">    op.sem_op = <span class="number">-1</span>;</span><br><span class="line">    op.sem_flg = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">while</span> (semop(semid, &amp;op, <span class="number">1</span>) &lt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (errno != EINTR || errno != EAGAIN)</span><br><span class="line">        &#123;</span><br><span class="line">            perror(<span class="string">&quot;semop()&quot;</span>);</span><br><span class="line">            <span class="built_in">exit</span>(EXIT_FAILURE);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">V</span><span class="params">(<span class="type">void</span>)</span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sembuf</span> <span class="title">op</span>;</span></span><br><span class="line"></span><br><span class="line">    op.sem_num = <span class="number">0</span>;</span><br><span class="line">    op.sem_op = <span class="number">1</span>;</span><br><span class="line">    op.sem_flg = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span> (semop(semid, &amp;op, <span class="number">1</span>) &lt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        perror(<span class="string">&quot;semop()&quot;</span>);</span><br><span class="line">        <span class="built_in">exit</span>(EXIT_FAILURE);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="type">void</span> <span class="title function_">func_add</span><span class="params">(<span class="type">void</span>)</span>&#123;</span><br><span class="line">    <span class="type">int</span> fd;</span><br><span class="line">    FILE *fp;</span><br><span class="line">    <span class="type">char</span> buf[LINESIZE];</span><br><span class="line"></span><br><span class="line">    fp = fopen(FNAME, <span class="string">&quot;r+&quot;</span>);</span><br><span class="line">    <span class="keyword">if</span> (fp == <span class="literal">NULL</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        perror(<span class="string">&quot;fopen()&quot;</span>);</span><br><span class="line">        <span class="built_in">exit</span>(EXIT_FAILURE);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    P();</span><br><span class="line">    fgets(buf, LINESIZE, fp);</span><br><span class="line">    fseek(fp, <span class="number">0</span>, SEEK_SET);</span><br><span class="line">    <span class="comment">// sleep(1);</span></span><br><span class="line">    <span class="built_in">fprintf</span>(fp, <span class="string">&quot;%d\n&quot;</span>, atoi(buf) + <span class="number">1</span>);</span><br><span class="line">    fflush(fp);</span><br><span class="line">    V();</span><br><span class="line"></span><br><span class="line">    fclose(fp);</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span>&#123;</span><br><span class="line">    <span class="type">int</span> i;</span><br><span class="line">    <span class="type">pid_t</span> pid;</span><br><span class="line"></span><br><span class="line">    semid = semget(IPC_PRIVATE, <span class="number">1</span>, <span class="number">0600</span>);</span><br><span class="line">    <span class="keyword">if</span> (semid &lt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        perror(<span class="string">&quot;semget()&quot;</span>);</span><br><span class="line">        <span class="built_in">exit</span>(EXIT_FAILURE);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (semctl(semid, <span class="number">0</span>, SETVAL, <span class="number">1</span>) &lt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        perror(<span class="string">&quot;semctl()&quot;</span>);</span><br><span class="line">        <span class="built_in">exit</span>(EXIT_FAILURE);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; PROCNUM; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        pid = fork();</span><br><span class="line">        <span class="keyword">if</span> (pid &lt; <span class="number">0</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            perror(<span class="string">&quot;fork()&quot;</span>);</span><br><span class="line">            <span class="built_in">exit</span>(EXIT_FAILURE);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (pid == <span class="number">0</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            func_add();</span><br><span class="line">            <span class="built_in">exit</span>(EXIT_SUCCESS);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; PROCNUM; i++)</span><br><span class="line">    &#123;</span><br><span class="line">        wait(<span class="literal">NULL</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    semctl(semid, <span class="number">0</span>, IPC_RMID);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">exit</span>(EXIT_SUCCESS);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>编译运行结果如下：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cat</span> /tmp/out</span><br><span class="line">0</span><br><span class="line">$ make add_sem</span><br><span class="line">cc     add_sem.c   -o add_sem</span><br><span class="line">$ ./add_sem </span><br><span class="line">$ <span class="built_in">cat</span> /tmp/out</span><br><span class="line">20</span><br><span class="line">$ ./add_sem </span><br><span class="line">$ <span class="built_in">cat</span> /tmp/out</span><br><span class="line">40</span><br></pre></td></tr></table></figure>
+
+<h3 id="共享内存"><a href="#共享内存" class="headerlink" title="共享内存"></a>共享内存</h3><p>为了允许进程间快速交换大量数据而无需进行复制，UNIX系统引入了共享内存概念。共享内存创建一个物理内存的区域，可以被多个进程直接读取或写入，从而避免了昂贵的数据复制操作。</p>
+<p>关键函数和结构：</p>
+<ul>
+<li><code>shmget()</code>：获取共享内存标识符或创建一个新的共享内存段。</li>
+<li><code>shmat()</code>：将共享内存段附加到进程的地址空间。</li>
+<li><code>shmdt()</code>：分离共享内存段。</li>
+<li><code>shmctl()</code>：控制共享内存段的各种属性。</li>
+<li><code>struct shmid_ds</code>：描述共享内存段的数据结构，经常与<code>shmctl()</code>结合使用。</li>
+</ul>
+<h4 id="shmget-2"><a href="#shmget-2" class="headerlink" title="shmget(2)"></a>shmget(2)</h4><blockquote>
+<p>  <em>SHMGET(2)</em></p>
+<p>  <em><strong>NAME</strong></em></p>
+<p>  ​	<em>shmget - allocates a System V shared memory segment</em></p>
+<p>  <em><strong>SYNOPSIS</strong></em></p>
+<p>  ​	<em>#include &lt;sys&#x2F;ipc.h&gt;</em></p>
+<p>  ​	<em>#include &lt;sys&#x2F;shm.h&gt;</em></p>
+<p>  ​	<em>int shmget(key_t key, size_t size, int shmflg);</em></p>
+<p>  <em><strong>DESCRIPTION</strong></em></p>
+<p>  ​	<em>shmget()  returns  the  identifier of the System V shared memory segment associated with the value of the argument key.  It may be used either to obtain the identifier of a previously created shared memory segment (when shmflg is zero and key does not have the value IPC_PRIVATE), or to create a new set.</em></p>
+<p>  ​	<em>A  new shared memory segment, with size equal to the value of size rounded up to a multiple of PAGE_SIZE, is created if key has the value IPC_PRIVATE or key isn’t IPC_PRIVATE, no shared memory segment corresponding to key exists, and IPC_CREAT  is specified in shmflg.</em></p>
+<p>  ​	<em>If  shmflg  specifies  both  IPC_CREAT and IPC_EXCL and a shared memory segment already exists for key, then shmget() fails with errno set to EEXIST.  (This is analogous to the effect of the combination O_CREAT | O_EXCL for open(2).)</em></p>
+<p>  ​	<em>The value shmflg is composed of:</em></p>
+<p>  ​	<em><strong>IPC_CREAT</strong>   Create a new segment.  If this flag is not used, then shmget() will find the segment associated  with  key  and check to see if the user has permission to access the segment.</em></p>
+<p>  ​	<em><strong>IPC_EXCL</strong>    This  flag is used with IPC_CREAT to ensure that this call creates the segment.  If the segment already exists, the call fails.</em></p>
+<p>  <em>……</em></p>
+<p>  <em><strong>RETURN VALUE</strong></em></p>
+<p>  ​	<em>On success, a valid shared memory identifier is returned.  On error, -1 is returned, and errno is set to indicate  the  error.</em></p>
+</blockquote>
+<p>shmget() 函数用于创建一个新的共享内存段或获取现有的共享内存段的标识符。</p>
+<p>函数原型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/ipc.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/shm.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">shmget</span><span class="params">(<span class="type">key_t</span> key, <span class="type">size_t</span> size, <span class="type">int</span> shmflg)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>参数说明：</p>
+<ul>
+<li><code>key</code>：一个关键码，用于唯一标识一个共享内存段。通常，此关键码是使用 ftok() 函数生成的。</li>
+<li><code>size</code>：要创建的共享内存段的大小（以字节为单位）。此参数仅在创建新的共享内存段时使用。</li>
+<li><code>shmflg</code>：标志，定义了共享内存的权限和其他属性。常见的标志包括 <code>IPC_CREAT</code>（用于创建新的共享内存段）和 <code>IPC_EXCL</code>（与 <code>IPC_CREAT</code> 一起使用，确保不会意外地打开现有的段）。权限标志与文件权限相似，如 <code>0666</code> 等。</li>
+</ul>
+<p>函数返回值：</p>
+<ul>
+<li>成功时，返回共享内存段的标识符 (shmID)；</li>
+<li>失败时，返回-1，并设置<code>errno</code>为相应的错误代码。</li>
+</ul>
+<h4 id="shmop-2"><a href="#shmop-2" class="headerlink" title="shmop(2)"></a>shmop(2)</h4><blockquote>
+<p>  <em><strong>NAME</strong></em></p>
+<p>  ​       <em>shmat, shmdt - System V shared memory operations</em></p>
+<p>  <em><strong>SYNOPSIS</strong></em></p>
+<p>  ​       <em>#include &lt;sys&#x2F;types.h&gt;</em></p>
+<p>  ​       <em>#include &lt;sys&#x2F;shm.h&gt;</em></p>
+<p>  ​       <em>void *shmat(int shmid, const void *shmaddr, int shmflg);</em></p>
+<p>  ​       <em>int shmdt(const void *shmaddr);</em></p>
+<p>  <em><strong>DESCRIPTION</strong></em></p>
+<p>  <em><strong>shmat()</strong></em></p>
+<p>  ​       <em>shmat()  attaches the System V shared memory segment identified by shmid to the address space of the calling process.  The attaching address is specified by shmaddr with one of the following criteria:</em></p>
+<ul>
+<li><p><em>If shmaddr is NULL, the system chooses a suitable (unused) page-aligned address to attach the segment.</em></p>
+</li>
+<li><p><em>If shmaddr isn’t NULL and <strong>SHM_RND</strong> is specified in shmflg, the attach occurs at the address  equal  to  shmaddr  rounded down to the nearest multiple of <strong>SHMLBA</strong>.</em></p>
+</li>
+<li><p><em>Otherwise, shmaddr must be a page-aligned address at which the attach occurs.</em></p>
+</li>
+</ul>
+<p>  ​       <em>In addition to <strong>SHM_RND</strong>, the following flags may be specified in the shmflg bit-mask argument:</em></p>
+<p>  ​       <em><strong>SHM_EXEC</strong> (Linux-specific; since Linux 2.6.9) Allow the contents of the segment to be executed.  The caller must have execute permission on the segment.</em></p>
+<p>  ​       <em><strong>SHM_RDONLY</strong> Attach  the  segment for read-only access.  The process must have read permission for the segment.  If this flag is not specified, the segment is attached for read and write access, and the process must have read and write  permission for the segment.  There is no notion of a write-only shared memory segment.</em></p>
+<p>  ​       <em><strong>SHM_REMAP</strong> (Linux-specific) This  flag  specifies  that the mapping of the segment should replace any existing mapping in the range starting at shmaddr and continuing for the size of the segment.  (Normally, an <strong>EINVAL</strong> error would result if a  mapping  already exists in this address range.)  In this case, shmaddr must not be NULL.</em></p>
+<p>  ​       <em>The  brk(2)  value  of  the  calling  process is not altered by the attach.  The segment will automatically be detached at process exit.  The same segment may be attached as a read and as a read-write one, and more than once,  in  the  process’s address space.</em></p>
+<p>  ​       <em>A  successful shmat() call updates the members of the shmid_ds structure (see shmctl(2)) associated with the shared memory segment as follows:</em></p>
+<p>  ​              <em>shm_atime is set to the current time.</em></p>
+<p>  ​              <em>shm_lpid is set to the process-ID of the calling process.</em></p>
+<p>  ​              <em>shm_nattch is incremented by one.</em></p>
+<p>  <em><strong>shmdt()</strong></em></p>
+<p>  ​       <em>shmdt() detaches the shared memory segment located at the address specified by shmaddr from the address space of the calling  process.   The  to-be-detached segment must be currently attached with shmaddr equal to the value returned by the attaching shmat() call.</em></p>
+<p>  ​       <em>On a successful shmdt() call, the system updates the members of the shmid_ds structure associated with the  shared  memory segment as follows:</em></p>
+<p>  ​              <em>shm_dtime is set to the current time.</em></p>
+<p>  ​              <em>shm_lpid is set to the process-ID of the calling process.</em></p>
+<p>  ​              <em>shm_nattch is decremented by one.  If it becomes 0 and the segment is marked for deletion, the segment is deleted.</em></p>
+<p>  <em><strong>RETURN VALUE</strong></em></p>
+<p>  ​       <em>On  success, shmat() returns the address of the attached shared memory segment; on error, (void *) -1 is returned, and errno is set to indicate the cause of the error.</em></p>
+<p>  ​       <em>On success, shmdt() returns 0; on error -1 is returned, and errno is set to indicate the cause of the error.</em></p>
+<p>  <em><strong>ERRORS</strong></em></p>
+<p>  ​       <em>When shmat() fails, errno is set to one of the following:</em></p>
+<p>  ​       <em><strong>EACCES</strong> The calling process does not have the required permissions for the requested attach type, and  does  not  have  the <strong>CAP_IPC_OWNER</strong> capability in the user namespace that governs its IPC namespace.</em></p>
+<p>  ​       <em><strong>EIDRM</strong>  shmid points to a removed identifier.</em></p>
+<p>  ​       <em><strong>EINVAL</strong> Invalid  shmid value, unaligned (i.e., not page-aligned and <strong>SHM_RND</strong> was not specified) or invalid shmaddr value, or can’t attach segment at shmaddr, or <strong>SHM_REMAP</strong> was specified and shmaddr was NULL.</em></p>
+<p>  ​       <em><strong>ENOMEM</strong> Could not allocate memory for the descriptor or for the page tables.</em></p>
+<p>  ​       <em>When shmdt() fails, errno is set as follows:</em></p>
+<p>  ​       <em><strong>EINVAL</strong> There is no shared memory segment attached at shmaddr; or, shmaddr is not aligned on a page boundary.</em></p>
+</blockquote>
+<h5 id="shmat-2"><a href="#shmat-2" class="headerlink" title="shmat(2)"></a>shmat(2)</h5><p>函数背景：当进程需要访问共享内存段的数据时，它必须首先将该段“附加”到自己的地址空间。shmat() 正是执行这一操作的函数。附加操作使得共享内存段在进程的地址空间中成为一个连续的内存块，进程可以像访问其常规内存那样访问它。</p>
+<p>shmat()函数功能为：</p>
+<ul>
+<li>将指定的共享内存段附加到调用进程的地址空间；</li>
+<li>提供对共享内存段的直接内存访问。</li>
+</ul>
+<p>函数原型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/shm.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> *<span class="title function_">shmat</span><span class="params">(<span class="type">int</span> shmid, <span class="type">const</span> <span class="type">void</span> *shmaddr, <span class="type">int</span> shmflg)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>参数说明：</p>
+<ul>
+<li><code>shmid</code>：是由 shmget() 返回的共享内存段标识符。</li>
+<li><code>shmaddr</code>：是一个指针，指示共享内存应该附加到进程地址空间的位置。通常，这个参数设置为 <code>NULL</code>，让系统选择合适的地址。</li>
+<li><code>shmflg</code>：这是一个标志集，它指定了附加的语义。最常用的标志是 <code>SHM_RDONLY</code>，用于以只读方式附加共享内存。</li>
+</ul>
+<p>函数返回值：</p>
+<ul>
+<li>成功时，返回指向共享内存段的指针。</li>
+<li>失败时，返回 <code>(void *) -1</code> 并设置 <code>errno</code> 为相应的错误代码。</li>
+</ul>
+<p>注意事项：</p>
+<ol>
+<li>附加次数：同一个共享内存段可以被多个进程多次附加。</li>
+<li>地址选择：通常，建议让系统选择共享内存的附加地址，除非有特定的原因需要选择特定的地址。</li>
+<li>分离：一旦完成对共享内存的访问，进程应使用 shmdt() 函数分离共享内存，尽管进程终止时会自动分离。</li>
+<li>同步：当多个进程访问共享内存时，需要考虑同步，确保数据的一致性和完整性。</li>
+</ol>
+<h5 id="shmdt-2"><a href="#shmdt-2" class="headerlink" title="shmdt(2)"></a>shmdt(2)</h5><p>函数背景：当进程完成对共享内存段的访问后，为了保持资源管理的整洁，通常需要将其从进程的地址空间中分离出来。shmdt() 函数将先前通过 shmat() 附加到进程地址空间的共享内存段进行分离。</p>
+<p>函数原型如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/shm.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">shmdt</span><span class="params">(<span class="type">const</span> <span class="type">void</span> *shmaddr)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>参数说明：</p>
+<ul>
+<li><code>shmaddr</code>：是指向共享内存段开始的指针，这是先前由 shmat() 返回的。</li>
+</ul>
+<p>函数返回值：</p>
+<ul>
+<li>成功时，返回 0；</li>
+<li>失败时，返回 -1，并设置 <code>errno</code> 为相应的错误代码。</li>
+</ul>
+<p>举个栗子：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/ipc.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/shm.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">key_t</span> key;</span><br><span class="line">	<span class="type">int</span> shmid;</span><br><span class="line">	<span class="type">char</span> *data;</span><br><span class="line"></span><br><span class="line">	key = ftok(<span class="string">&quot;/etc/services&quot;</span>, <span class="number">1</span>);</span><br><span class="line">	<span class="keyword">if</span> (key == <span class="number">-1</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		perror(<span class="string">&quot;ftok&quot;</span>);</span><br><span class="line">		<span class="built_in">exit</span>(EXIT_FAILURE);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	shmid = shmget(key, <span class="number">1024</span>, IPC_CREAT | <span class="number">0666</span>);</span><br><span class="line">	<span class="keyword">if</span> (shmid == <span class="number">-1</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		perror(<span class="string">&quot;shmget&quot;</span>);</span><br><span class="line">		<span class="built_in">exit</span>(EXIT_FAILURE);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;Shared Memory ID: %d\n&quot;</span>, shmid);</span><br><span class="line"></span><br><span class="line">	data = shmat(shmid, <span class="literal">NULL</span>, <span class="number">0</span>);</span><br><span class="line">	<span class="keyword">if</span> (data == (<span class="type">void</span> *)<span class="number">-1</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		perror(<span class="string">&quot;shmat&quot;</span>);</span><br><span class="line">		<span class="built_in">exit</span>(EXIT_FAILURE);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">&quot;Shared memory attached at address: %p\n&quot;</span>, data);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (shmdt(data) == <span class="number">-1</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		perror(<span class="string">&quot;shmdt&quot;</span>);</span><br><span class="line">		<span class="built_in">exit</span>(EXIT_FAILURE);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">exit</span>(EXIT_SUCCESS);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="shmctl-2"><a href="#shmctl-2" class="headerlink" title="shmctl(2)"></a>shmctl(2)</h4><p>函数背景：在共享内存的生命周期中，可能需要执行各种管理和控制任务。例如我们可能需要更改共享内存的权限，获取其使用状态，或者当它不再需要时删除它。shmctl() 提供了这样的管理和控制能力。</p>
+<p>函数功能：</p>
+<ul>
+<li>获取共享内存的状态信息；</li>
+<li>设置共享内存的权限或其他属性；</li>
+<li>删除共享内存段。</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/ipc.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;sys/shm.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">shmctl</span><span class="params">(<span class="type">int</span> shmid, <span class="type">int</span> cmd, <span class="keyword">struct</span> shmid_ds *buf)</span>;</span><br></pre></td></tr></table></figure>
+
+<p>参数说明：</p>
+<ul>
+<li><code>shmid</code>：是由 shmget() 返回的共享内存段标识符。</li>
+<li><code>cmd</code>：指定要执行的操作，常见的命令有：<ul>
+<li><code>IPC_STAT</code>：获取共享内存的状态。</li>
+<li><code>IPC_SET</code>：设置共享内存的属性。</li>
+<li><code>IPC_RMID</code>：删除共享内存段。</li>
+</ul>
+</li>
+<li><code>buf</code>：是一个指向 <code>shmid_ds</code> 结构的指针，该结构包含有关共享内存段的信息。对于 <code>IPC_STAT</code>，此结构被填充；对于 <code>IPC_SET</code>，此结构提供新的属性值。</li>
+</ul>
+<p>函数返回值：</p>
+<ul>
+<li>成功时，返回 0；</li>
+<li>失败时，返回 -1，并设置 <code>errno</code> 为相应的错误代码。</li>
+</ul>
+<p>注意事项：</p>
+<ol>
+<li>删除共享内存段：使用 <code>IPC_RMID</code> 命令删除共享内存段后，该段立即被标记为“待删除”，并在最后一个附加进程分离后实际删除。这意味着，即使已经调用了 <code>IPC_RMID</code>，只要仍有进程附加到共享内存，它就不会立即消失。</li>
+<li>权限和所有权：使用 <code>IPC_SET</code> 更改共享内存段的属性时，需要确保具有相应的权限。例如，只有创建共享内存的用户或超级用户可以更改其权限。</li>
+<li>状态信息：使用 <code>IPC_STAT</code> 可以获取共享内存段的多种信息，包括创建时间、最后一次附加和分离的时间、当前附加的进程数等。</li>
+</ol>
+</div>
+        </div>
+        
+            <div class="kratos-copyright text-center clearfix">
+                <h5 itemprop="copyrightNotice">本作品采用 <a rel="license nofollow" target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/">知识共享署名-相同方式共享 4.0 国际许可协议</a> 进行许可</h5>
+            </div>
+        
+        <footer class="kratos-entry-footer clearfix">
+            
+                <div class="post-like-donate text-center clearfix" id="post-like-donate">
+                
+                
+                    <a class="share" href="javascript:;"><i class="fa fa-share-alt"></i> 分享</a>
+                    <div class="share-wrap" style="display: none;">
+    <div class="share-group">
+        <a href="javascript:;" class="share-plain qq" onclick="share('qq');" rel="nofollow">
+            <div class="icon-wrap">
+                <i class="fa fa-qq"></i>
+            </div>
+        </a>
+        <a href="javascript:;" class="share-plain qzone" onclick="share('qzone');" rel="nofollow">
+            <div class="icon-wrap">
+                <i class="fa fa-star"></i>
+            </div>
+        </a>
+        <a href="javascript:;" class="share-plain weixin pop style-plain" rel="nofollow">
+            <div class="icon-wrap">
+                <i class="fa fa-weixin"></i>
+            </div>
+            <div class="share-int">
+                <div class="qrcode" id="wechat-qr"></div>
+                <p>打开微信“扫一扫”，打开网页后点击屏幕右上角分享按钮</p>
+            </div>
+        </a>
+        <a href="javascript:;" class="share-plain weibo" onclick="share('weibo');" rel="nofollow">
+            <div class="icon-wrap">
+                <i class="fa fa-weibo"></i>
+            </div>
+        </a>
+        <a href="javascript:;" class="share-plain facebook style-plain" onclick="share('facebook');" rel="nofollow">
+            <div class="icon-wrap">
+                <i class="fa fa-facebook"></i>
+            </div>
+        </a>
+        <a href="javascript:;" class="share-plain twitter style-plain" onclick="share('twitter');" rel="nofollow">
+            <div class="icon-wrap">
+                <i class="fa fa-twitter"></i>
+            </div>
+        </a>
+    </div>
+    <script type="text/javascript">
+        $(()=>{
+            new QRCode("wechat-qr", {
+                text: "http://example.com/2023/08/25/Chapter6_%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1/",
+                width: 150,
+                height: 150,
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        });
+        function share(dest) {
+            const qqBase        = "https://connect.qq.com/widget/shareqq/index.html?";
+            const weiboBase     = "https://service.weibo.com/share/share.php?";
+            const qzoneBase     = "https://sns.qzone.qq.com/cgi-bin/qzshare/cgi_qzshare_onekey?";
+            const facebookBase  = "https://www.facebook.com/sharer/sharer.php?";
+            const twitterBase   = "https://twitter.com/intent/tweet?";
+            const hostUrl       = "http://example.com/2023/08/25/Chapter6_%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1/";
+            const title         = "「第六章：进程间通信」";
+            const excerpt       = `介绍进程间通信的几种方式：管道、消息队列、信号量、共享内存`;
+            let _URL;
+            switch (dest) {
+                case "qq"       : _URL = qqBase+"url="+hostUrl+"&title="+title+"&desc=&summary="+excerpt+"&site=cxpy";     break;
+                case "weibo"    : _URL = weiboBase+"url="+hostUrl+"&title="+title+excerpt;                                 break;
+                case "qzone"    : _URL = qzoneBase+"url="+hostUrl+"&title="+title+"&desc=&summary="+excerpt+"&site=cxpy";  break;
+                case "facebook" : _URL = facebookBase+"u="+hostUrl;                                                        break;
+                case "twitter"  : _URL = twitterBase+"text="+title+excerpt+"&url="+hostUrl;                                break;
+            }
+            window.open(_URL);
+        };
+    </script>
+</div>
+                
+                </div>
+            
+            <div class="footer-tag clearfix">
+                <div class="pull-left">
+                <i class="fa fa-tags"></i>
+                    <a class="tag-none-link" href="/tags/system-programming/" rel="tag">system programming</a>
+                </div>
+                <div class="pull-date">
+                    <time datetime="2023-08-25T08:52:01.056Z" itemprop="dateModified">最后编辑：2023-08-25</time>
+                </div>
+            </div>
+        </footer>
+    </div>
+    
+        <nav class="navigation post-navigation clearfix" role="navigation">
+            
+            <div class="nav-previous clearfix">
+                <a title=" 第三章：进程" href="/2023/08/22/Chapter3_进程/">&lt; 上一篇</a>
+            </div>
+            
+            
+        </nav>
+    
+    
+</article>
+
+        
+
+            </section>
+
+        
+
+                
+            
+
+<section id="kratos-widget-area" class="col-md-4 hidden-xs hidden-sm">
+    <!-- 文章和页面根据splitter来分割，没有的话就从头开始设置为sticky -->
+    
+    
+                <aside id="krw-about" class="widget widget-kratos-about clearfix">
+    <div class="photo-background"></div>
+    <div class="photo-wrapper clearfix">
+        <div class="photo-wrapper-tip text-center">
+            <img class="about-photo" src="/images/avatar.png" loading="lazy" decoding="auto" />
+        </div>
+    </div>
+    <div class="textwidget">
+        <p class="text-center"></p>
+    </div>
+    <div class="site-meta">
+        <a class="meta-item" href="/archives/">
+            <span class="title">
+                文章
+            </span>
+            <span class="count">
+                16
+            </span>
+        </a>
+        <a class="meta-item" href="/categories/">
+            <span class="title">
+                分类
+            </span>
+            <span class="count">
+                5
+            </span>
+        </a>
+        <a class="meta-item" href="/tags/">
+            <span class="title">
+                标签
+            </span>
+            <span class="count">
+                7
+            </span>
+        </a>
+    </div>
+</aside>
+            
+                    <div class="sticky-area">
+                
+                    <aside id="krw-toc" class="widget widget-kratos-toc clearfix toc-div-class" >
+    <div class="photo-background"></div>
+    <h4 class="widget-title no-after">
+        <i class="fa fa-compass"></i>
+        文章目录
+        <span class="toc-progress-bar" role="progressbar" aria-label="阅读进度："></span>
+    </h4>
+    <div class="textwidget">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AE%A1%E9%81%93"><span class="toc-text">管道</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8C%BF%E5%90%8D%E7%AE%A1%E9%81%93-pipe-2"><span class="toc-text">匿名管道|pipe(2)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%91%BD%E5%90%8D%E7%AE%A1%E9%81%93-mkfifo-3"><span class="toc-text">命名管道|mkfifo(3)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#XSI-IPC"><span class="toc-text">XSI-IPC</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#ftok-3"><span class="toc-text">ftok(3)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97"><span class="toc-text">消息队列</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#msgget-2"><span class="toc-text">msgget(2)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#msgop-2"><span class="toc-text">msgop(2)</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#msgsnd-2"><span class="toc-text">msgsnd(2)</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#msgrcv-2"><span class="toc-text">msgrcv(2)</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#msgctl-2"><span class="toc-text">msgctl(2)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BF%A1%E5%8F%B7%E9%87%8F"><span class="toc-text">信号量</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#semget-2"><span class="toc-text">semget(2)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#semop-2"><span class="toc-text">semop(2)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#semctl-2"><span class="toc-text">semctl(2)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B1%E4%BA%AB%E5%86%85%E5%AD%98"><span class="toc-text">共享内存</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#shmget-2"><span class="toc-text">shmget(2)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#shmop-2"><span class="toc-text">shmop(2)</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#shmat-2"><span class="toc-text">shmat(2)</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#shmdt-2"><span class="toc-text">shmdt(2)</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#shmctl-2"><span class="toc-text">shmctl(2)</span></a></li></ol></li></ol></li></ol>
+    </div>
+</aside>
+                
+                
+  <aside id="krw-categories" class="widget widget-kratos-categories clearfix">
+    <h4 class="widget-title"><i class="fa fa-folder"></i>分类目录</h4>
+      <ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/SQL%E6%B3%A8%E5%85%A5/">SQL注入</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E3%80%8A%E7%B3%BB%E7%BB%9F%E7%BC%96%E7%A8%8B%E5%AE%9E%E8%B7%B5%EF%BC%88C%E8%AF%AD%E8%A8%80%E7%89%88%EF%BC%89%E3%80%8B/">《系统编程实践（C语言版）》</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E4%BA%8C%E8%BF%9B%E5%88%B6/">二进制</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95/">渗透测试</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/%E8%BD%AF%E4%BB%B6%E6%BF%80%E6%B4%BB/">软件激活</a><span class="category-list-count">1</span></li></ul>
+  </aside>
+
+
+            
+                
+  <aside id="krw-tags" class="widget widget-kratos-tags clearfix">
+    <h4 class="widget-title"><i class="fa fa-tags"></i>标签聚合</h4>
+      <div class="tag-clouds">
+        <a href="/tags/BurpSuite/" style="font-size: 0.6em;">BurpSuite</a> <a href="/tags/DynELF/" style="font-size: 0.6em;">DynELF</a> <a href="/tags/ELF/" style="font-size: 0.6em;">ELF</a> <a href="/tags/SSH%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95/" style="font-size: 0.6em;">SSH免密登录</a> <a href="/tags/system-programming/" style="font-size: 0.8em;">system programming</a> <a href="/tags/%E5%85%B1%E4%BA%AB%E5%BA%93/" style="font-size: 0.6em;">共享库</a> <a href="/tags/%E5%8A%A8%E6%80%81%E9%93%BE%E6%8E%A5/" style="font-size: 0.6em;">动态链接</a>
+      </div>
+  </aside>
+
+            
+                
+  <aside id="krw-posts" class="widget widget-kratos-posts">
+  <h4 class="widget-title"><i class="fa fa-file"></i>最新文章</h4>
+  <div class="tab-content">
+      <ul class="list-group">
+        
+        
+          
+          
+            <a class="list-group-item" href="/2023/08/25/Chapter6_%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1/"><i class="fa  fa-book"></i> 第六章：进程间通信</a>
+            
+          
+        
+          
+          
+            <a class="list-group-item" href="/2023/08/22/Chapter3_%E8%BF%9B%E7%A8%8B/"><i class="fa  fa-book"></i> 第三章：进程</a>
+            
+          
+        
+          
+          
+            <a class="list-group-item" href="/2023/08/18/%E9%92%A9%E5%AD%90%E5%87%BD%E6%95%B0/"><i class="fa  fa-book"></i> 钩子函数|进程的终止方式</a>
+            
+          
+        
+          
+          
+            <a class="list-group-item" href="/2023/08/17/%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%8F%82%E6%95%B0%E7%9A%84%E5%88%86%E6%9E%90/"><i class="fa  fa-book"></i> 解析命令行参数</a>
+            
+          
+        
+          
+          
+            <a class="list-group-item" href="/2023/08/16/Chapter5_%E7%BA%BF%E7%A8%8B%E9%87%8D%E8%A6%81%E5%87%BD%E6%95%B0/"><i class="fa  fa-book"></i> 第五章：线程相关函数</a>
+            
+          
+        
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+          
+            
+      </ul>
+  </div>
+  </aside>
+
+            
+    </div>
+</section>
+        
+        </div>
+    </div>
+</div>
+<footer>
+    <div id="footer"  class="ap-lrc"  >
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 col-md-offset-3 footer-list text-center">
+                    <ul class="kratos-social-icons">
+                        <!-- Keep for compatibility -->
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        <!-- New links -->
+                        
+                    </ul>
+                    <ul class="kratos-copyright">
+                        <div>
+                            <li>&copy; 2023 江城子同学 版权所有.</li>
+                            <li>本站已运行<span id="span_dt">Loading...</span></li>
+                        </div>
+                        <div>
+                            <li>Theme <a href="https://github.com/Candinya/Kratos-Rebirth" target="_blank">Kratos:Rebirth</a></li>
+                            <li>Site built with&nbsp;<i class="fa fa-heart throb" style="color:#d43f57"></i>&nbsp;by flyingfox.</li>
+                        </div>
+                        <div>
+                            <li>Powered by <a href="https://hexo.io" target="_blank" rel="nofollow">Hexo</a></li>
+                            <li>Hosted on <a href="https://github.io" target="_blank">Github Pages</a></li>
+                        </div>
+                        <div>
+                            
+                            
+                        </div>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="kr-tool text-center">
+            <div class="tool">
+                
+                    <div class="box search-box">
+                        <a href="/search/">
+                            <span class="fa fa-search"></span>
+                        </a>
+                    </div>
+                
+                
+                    <div class="box theme-box" id="darkmode-switch">
+                        <span class="fa fa-adjust"></span>
+                    </div>
+                
+                
+                    <div class="box theme-box" id="snow-switch">
+                        <span class="fa fa-snowflake-o"></span>
+                    </div>
+                
+                
+            </div>
+            <div class="box gotop-box">
+                <span class="fa fa-chevron-up"></span>
+            </div>
+        </div>
+    </div>
+</footer>
+</div>
+</div>
+
+        <script defer src="/vendors/bootstrap@3.3.4/dist/js/bootstrap.min.js"></script>
+<script defer src="/vendors/nprogress@0.2.0/nprogress.js"></script>
+<script>
+    if (!window.kr) {
+        window.kr = {};
+    }
+    window.kr.notMobile = (!(navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i)));
+    window.kr.siteRoot = "/";
+</script>
+
+    <div>
+        <canvas id="snow"></canvas>
+        <script async src="/js/snow.min.js"></script>
+    </div>
+
+
+    <script async src="/js/candy.min.js"></script>
+
+
+
+    <script defer src="/vendors/aplayer@1.10.1/dist/APlayer.min.js"></script>
+    
+    <script defer src="/vendors/meting@2.0.1/dist/Meting.min.js"></script>
+    <meting-js
+        server="netease"
+        type="playlist"
+        id="3204190542"
+        order="random"
+        fixed="true"
+    >
+    </meting-js>
+
+
+
+    <script defer src="/vendors/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js"></script>
+
+<script defer src="/js/kratosr.min.js"></script>
+<script defer src="/js/pjax.min.js"></script>
+
+
+
+<!-- Extra support for third-party plguins  -->
+
+
+    </body>
+</html>
